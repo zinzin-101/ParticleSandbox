@@ -1,0 +1,18 @@
+﻿  main.cpp
+C:\Users\ddctl\Documents\SFML_projects\VerletSFML_sol\VerletSFML\renderer.hpp(28,68): warning C4244: 'argument': conversion from 'const int' to 'T', possible loss of data
+C:\Users\ddctl\Documents\SFML_projects\VerletSFML_sol\VerletSFML\renderer.hpp(28,68): warning C4244:         with
+C:\Users\ddctl\Documents\SFML_projects\VerletSFML_sol\VerletSFML\renderer.hpp(28,68): warning C4244:         [
+C:\Users\ddctl\Documents\SFML_projects\VerletSFML_sol\VerletSFML\renderer.hpp(28,68): warning C4244:             T=float
+C:\Users\ddctl\Documents\SFML_projects\VerletSFML_sol\VerletSFML\renderer.hpp(28,68): warning C4244:         ]
+C:\Users\ddctl\Documents\SFML_projects\VerletSFML_sol\VerletSFML\renderer.hpp(28,52): warning C4244: 'argument': conversion from 'const int' to 'T', possible loss of data
+C:\Users\ddctl\Documents\SFML_projects\VerletSFML_sol\VerletSFML\renderer.hpp(28,52): warning C4244:         with
+C:\Users\ddctl\Documents\SFML_projects\VerletSFML_sol\VerletSFML\renderer.hpp(28,52): warning C4244:         [
+C:\Users\ddctl\Documents\SFML_projects\VerletSFML_sol\VerletSFML\renderer.hpp(28,52): warning C4244:             T=float
+C:\Users\ddctl\Documents\SFML_projects\VerletSFML_sol\VerletSFML\renderer.hpp(28,52): warning C4244:         ]
+C:\Users\ddctl\Documents\SFML_projects\VerletSFML_sol\VerletSFML\main.cpp(405,15): warning C4244: 'return': conversion from 'WPARAM' to 'int', possible loss of data
+  Generating code
+  3 of 267 functions ( 1.1%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    0 functions had inline decision re-evaluated but remain unchanged
+  Finished generating code
+  VerletSFML.vcxproj -> C:\Users\ddctl\Documents\SFML_projects\VerletSFML_sol\x64\Release\VerletSFML.exe
