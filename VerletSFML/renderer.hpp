@@ -23,7 +23,7 @@ public:
         constraint_background.setPointCount(128);
         m_target.draw(constraint_background);*/
 
-        sf::RectangleShape rectangle(sf::Vector2f(900.f, 900.f));
+        sf::RectangleShape rectangle(sf::Vector2f(1400.f, 900.f));
         rectangle.setPosition(50, 50);
         rectangle.setFillColor(sf::Color::Black);
         m_target.draw(rectangle);
