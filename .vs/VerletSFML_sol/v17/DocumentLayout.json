@@ -1,0 +1,71 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "E:\\CodingProject\\calphyssim\\VerletSFML_sol\\cal-physics-sim\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{B29A7C99-0A7F-4D0F-AEE2-43D10A4F1E78}|VerletSFML\\VerletSFML.vcxproj|E:\\CodingProject\\calphyssim\\VerletSFML_sol\\cal-physics-sim\\VerletSFML\\main.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{B29A7C99-0A7F-4D0F-AEE2-43D10A4F1E78}|VerletSFML\\VerletSFML.vcxproj|solutionrelative:VerletSFML\\main.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B29A7C99-0A7F-4D0F-AEE2-43D10A4F1E78}|VerletSFML\\VerletSFML.vcxproj|E:\\CodingProject\\calphyssim\\VerletSFML_sol\\cal-physics-sim\\VerletSFML\\renderer.hpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{B29A7C99-0A7F-4D0F-AEE2-43D10A4F1E78}|VerletSFML\\VerletSFML.vcxproj|solutionrelative:VerletSFML\\renderer.hpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B29A7C99-0A7F-4D0F-AEE2-43D10A4F1E78}|VerletSFML\\VerletSFML.vcxproj|E:\\CodingProject\\calphyssim\\VerletSFML_sol\\cal-physics-sim\\VerletSFML\\solver.hpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{B29A7C99-0A7F-4D0F-AEE2-43D10A4F1E78}|VerletSFML\\VerletSFML.vcxproj|solutionrelative:VerletSFML\\solver.hpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 2,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "solver.hpp",
+              "DocumentMoniker": "E:\\CodingProject\\calphyssim\\VerletSFML_sol\\cal-physics-sim\\VerletSFML\\solver.hpp",
+              "RelativeDocumentMoniker": "VerletSFML\\solver.hpp",
+              "ToolTip": "E:\\CodingProject\\calphyssim\\VerletSFML_sol\\cal-physics-sim\\VerletSFML\\solver.hpp",
+              "RelativeToolTip": "VerletSFML\\solver.hpp",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAGsAAAAvAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2024-07-10T16:57:35.202Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "renderer.hpp",
+              "DocumentMoniker": "E:\\CodingProject\\calphyssim\\VerletSFML_sol\\cal-physics-sim\\VerletSFML\\renderer.hpp",
+              "RelativeDocumentMoniker": "VerletSFML\\renderer.hpp",
+              "ToolTip": "E:\\CodingProject\\calphyssim\\VerletSFML_sol\\cal-physics-sim\\VerletSFML\\renderer.hpp",
+              "RelativeToolTip": "VerletSFML\\renderer.hpp",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAACAAAAAmAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2024-07-10T16:57:33.893Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "main.cpp",
+              "DocumentMoniker": "E:\\CodingProject\\calphyssim\\VerletSFML_sol\\cal-physics-sim\\VerletSFML\\main.cpp",
+              "RelativeDocumentMoniker": "VerletSFML\\main.cpp",
+              "ToolTip": "E:\\CodingProject\\calphyssim\\VerletSFML_sol\\cal-physics-sim\\VerletSFML\\main.cpp",
+              "RelativeToolTip": "VerletSFML\\main.cpp",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAFYAAAAtAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2024-07-10T16:57:33.012Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

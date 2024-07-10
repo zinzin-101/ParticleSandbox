@@ -5,13 +5,6 @@
 
 #include "utils/math.hpp"
 
-extern int points[MAXPOINTS][2];
-extern int diff_points[MAXPOINTS][2];
-
-extern const int window_width;
-extern const int window_height;
-
-extern bool enableGravity;
 
 struct VerletObject
 {
@@ -104,10 +97,7 @@ public:
         m_time += m_frame_dt;
         const float step_dt = getStepDt();
         for (uint32_t i{m_sub_steps}; i--;) {
-            if (enableGravity) {
-                applyGravity();
-            }
-            applyTouchForce();
+            applyGravity();
             checkCollisions(step_dt);
             applyConstraint(step_dt);
             applyLinkConstraint(step_dt);
@@ -192,25 +182,6 @@ private:
         }
     }
 
-    void applyTouchForce()
-    {
-        for (auto& obj : m_objects) {
-            if (!obj.pinned) {
-                for (int i = 0; i < MAXPOINTS; i++) {
-                    if (points[i][0] >= 0) {
-                        sf::Vector2f touchPoint = {(float) points[i][0], (float) points[i][1] };
-                        sf::Vector2f v = obj.position - touchPoint;
-                        float dist2 = v.x * v.x + v.y * v.y;
-                        float dist = sqrt(dist2);
-                        if (dist < 150) {
-                            obj.accelerate({ (float)60.0f*diff_points[i][0], (float)60.0f * diff_points[i][1] });
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     void checkCollisions(float dt)
     {
         const float    response_coef = 0.75f;
@@ -268,22 +239,21 @@ private:
             // box constrain
             if (!obj.pinned) {
                 float bounce = 0.8f;
-                int border = 50;
                 sf::Vector2 v = obj.position - obj.position_last;
-                if (obj.position.x > ((window_width - border/2) - obj.radius)) {
-                    obj.position.x = (window_width - border / 2) - obj.radius;
+                if (obj.position.x > (950 - obj.radius)) {
+                    obj.position.x = 950 - obj.radius;
                     //obj.position_last.x = obj.position.x + v.x * bounce;
                 }
-                if (obj.position.x < (obj.radius)) {
-                    obj.position.x = obj.radius;
+                if (obj.position.x < (50 + obj.radius)) {
+                    obj.position.x = 50 + obj.radius;
                     //obj.position_last.x = obj.position.x + v.x * bounce;
                 }
-                if (obj.position.y > ((window_height - border) - obj.radius)) {
-                    obj.position.y = (window_height - border) - obj.radius;
+                if (obj.position.y > (950 - obj.radius)) {
+                    obj.position.y = 950 - obj.radius;
                     //obj.position_last.y = obj.position.y + v.y * bounce;
                 }
-                if (obj.position.y < (obj.radius)) {
-                    obj.position.y = obj.radius;
+                if (obj.position.y < (50 + obj.radius)) {
+                    obj.position.y = 50 + obj.radius;
                     //obj.position_last.y = obj.position.y + v.y * bounce;
                 }
             }
