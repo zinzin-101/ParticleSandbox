@@ -1,7 +1,9 @@
 ﻿#include <iostream>
 #include <SFML/Graphics.hpp>
 #include <SFML/System/Clock.hpp>
+#include <stdlib.h>
 #include <sstream>
+#include <time.h>
 #include <windows.h>    // included for Windows Touch
 #include <windowsx.h>   // included for point conversion
 #define MAXPOINTS 50
@@ -363,6 +365,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
     objIndex++;*/
 
+    srand(time(NULL));
 
     sf::Clock clock;
     unsigned int frameNum = 0;

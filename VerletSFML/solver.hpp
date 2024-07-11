@@ -2,6 +2,7 @@
 #include <vector>
 #include <cmath>
 #include <SFML/Graphics.hpp>
+#include <stdlib.h>
 
 #include "utils/math.hpp"
 
@@ -360,10 +361,27 @@ private:
                     // Update positions
 
                     if (object_1.type == GAS && object_2.type == WATER || object_1.type == WATER && object_2.type == GAS) {
-                        if (object_1.type == GAS)
-                            object_2.position -= n * ((object_2.position.y / 250.0f) * delta);
-                        if (object_2.type == GAS)
-                            object_1.position -= n * ((object_2.position.y / 250.0f) * delta);
+                        if (object_1.type == GAS) {
+                            object_1.setVelocity({0.0f, -200.0f}, getStepDt());
+                        }
+
+                        if (object_2.type == GAS) {
+                            object_2.setVelocity({ 0.0f, -200.0f }, getStepDt());
+                        }
+                    }
+
+                    if (object_1.type == SAND && object_2.type == WATER || object_1.type == WATER && object_2.type == SAND) {
+                        if (object_1.type == SAND) {
+                            if (object_1.position.y <= object_2.position.y) {
+                                object_1.setVelocity({ 0.0f, 150.0f }, getStepDt());
+                            }
+                        }
+
+                        if (object_2.type == SAND) {
+                            if (object_2.position.y <= object_1.position.y) {
+                                object_2.setVelocity({ 0.0f, 150.0f }, getStepDt());
+                            }
+                        }
                     }
 
                     if (!object_1.pinned)
