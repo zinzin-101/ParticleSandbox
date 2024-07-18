@@ -404,6 +404,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
             //    if (colorIndex >= 1.0f) colorIndex = 0.0f;
             //}
             solver.updateMousePos(sf::Mouse::getPosition(window));
+            solver.updateFrameNum(frameNum);
             if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
                 if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
                     solver.deleteBrush(5.0f);
@@ -446,27 +447,33 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num1)) {
                 selectedType = SAND;
-                std::cout << "Current Type: Sand" << std::endl;
             }
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num2)) {
                 selectedType = WATER;
-                std::cout << "Current Type: Water" << std::endl;
             }
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num3)) {
                 selectedType = CONCRETE;
-                std::cout << "Current Type: Concrete" << std::endl;
             }
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num4)) {
                 selectedType = LAVA;
-                std::cout << "Current Type: Lava" << std::endl;
             }
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num5)) {
                 selectedType = GAS;
-                std::cout << "Current Type: Gas" << std::endl;
             }
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num6)) {
+                selectedType = OBSIDIAN;
+            }
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num7)) {
+                selectedType = DIRT;
+            }
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num8)) {
+                selectedType = WOOD;
+            }
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num9)) {
+                selectedType = FIRE;
+            }
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num0)) {
                 selectedType = NONE;
-                std::cout << "Current Type: None" << std::endl;
             }
 
 
