@@ -15,6 +15,7 @@ enum TYPE {
     CONCRETE,
     LAVA,
     GAS,
+    OBSIDIAN,
     NONE
 };
 
@@ -26,12 +27,14 @@ struct VerletObject
     sf::Vector2f position;
     sf::Vector2f position_last;
     sf::Vector2f acceleration;
-    float        mass;
-    float        bounce;
+    float        mass          = 1.0f;
+    float        bounce        = 0.0f;
     float        radius        = 10.0f;
     sf::Color    color         = sf::Color::White;
-    bool         pinned = false;
-    TYPE         type;
+    bool         pinned        = false;
+    TYPE         type          = NONE;
+    float        frictionCoeff = 1.0f;
+    bool         grounded = false;
 
     VerletObject() = default;
     VerletObject(sf::Vector2f position_, float radius_, bool pin_, TYPE type_)
@@ -110,6 +113,7 @@ public:
             obj.pinned = false;
             obj.mass = 1.5f;
             obj.bounce = 0.0f;
+            obj.frictionCoeff = 0.1f;
             break;
         case WATER:
             obj.color = { 0,0,255 };
@@ -119,11 +123,12 @@ public:
             obj.bounce = 0.0f;
             break;
         case CONCRETE:
-            obj.color = { 50,50,50 };
+            obj.color = { 100,100,100 };
             obj.radius = 10.0f;
             obj.pinned = true;
             obj.mass = 3.0f;
             obj.bounce = 0.0f;
+            obj.frictionCoeff = 0.1f;
             break;
         case LAVA:
             obj.color = { 255,69,0 };
@@ -131,6 +136,7 @@ public:
             obj.pinned = false;
             obj.mass = 1.25f;
             obj.bounce = 0.0f;
+            obj.frictionCoeff = 0.7f;
             break;
         case GAS:
             obj.color = { 200,200,200 };
@@ -138,6 +144,14 @@ public:
             obj.pinned = false;
             obj.mass = 0.1f;
             obj.bounce = 0.0f;
+            break;
+        case OBSIDIAN:
+            obj.color = {50,50,50};
+            obj.radius = 4.0f;
+            obj.pinned = false;
+            obj.mass = 3.0f;
+            obj.bounce = 0.0f;
+            obj.frictionCoeff = 0.0f;
             break;
         default:
             obj.color = sf::Color::White;
@@ -272,6 +286,10 @@ public:
         }
     }
 
+    void clearAll() {
+        m_objects.clear();
+    }
+
 private:
     uint32_t                  m_sub_steps          = 1;
     sf::Vector2f              m_gravity            = {0.0f, 1000.0f};
@@ -333,24 +351,6 @@ private:
                 const float        min_dist = object_1.radius + object_2.radius;
                 // Check overlapping
                 if (dist2 < min_dist * min_dist) {
-
-                    if (object_1.type == WATER && object_2.type == LAVA || object_1.type == LAVA && object_2.type == WATER) {
-                        float midX = (object_1.position.x + object_2.position.x) / 2.0f;
-                        float midY = (object_1.position.y + object_2.position.y) / 2.0f;
-
-
-                        for (float x = -1.0f; x <= 1.0f; x += 0.5f) {
-                            for (float y = -1.0f; y <= 1.0f; y += 0.5f) {
-                                addObject({ midX + x, midY + y}, GAS);
-                            }
-                        }
-
-                        m_objects.erase(m_objects.begin() + k--);
-                        m_objects.erase(m_objects.begin() + i--);
-
-                        continue;
-                    }
-
                     const float        dist  = sqrt(dist2);
                     const sf::Vector2f n     = v / dist;
                     /*const float mass_ratio_1 = object_1.radius / (object_1.radius + object_2.radius);
@@ -360,34 +360,14 @@ private:
                     const float delta        = 0.5f * response_coef * (dist - min_dist);
                     // Update positions
 
-                    if (object_1.type == GAS && object_2.type == WATER || object_1.type == WATER && object_2.type == GAS) {
-                        if (object_1.type == GAS) {
-                            object_1.setVelocity({0.0f, -200.0f}, getStepDt());
-                        }
+                    bool canUpdate = computeReaction(object_1, object_2, mass_ratio_1, mass_ratio_2, i ,k);
 
-                        if (object_2.type == GAS) {
-                            object_2.setVelocity({ 0.0f, -200.0f }, getStepDt());
-                        }
+                    if (canUpdate) {
+                        if (!object_1.pinned)
+                            object_1.position -= n * (mass_ratio_2 * delta);
+                        if (!object_2.pinned)
+                            object_2.position += n * (mass_ratio_1 * delta);
                     }
-
-                    if (object_1.type == SAND && object_2.type == WATER || object_1.type == WATER && object_2.type == SAND) {
-                        if (object_1.type == SAND) {
-                            if (object_1.position.y <= object_2.position.y) {
-                                object_1.setVelocity({ 0.0f, 150.0f }, getStepDt());
-                            }
-                        }
-
-                        if (object_2.type == SAND) {
-                            if (object_2.position.y <= object_1.position.y) {
-                                object_2.setVelocity({ 0.0f, 150.0f }, getStepDt());
-                            }
-                        }
-                    }
-
-                    if (!object_1.pinned)
-                        object_1.position -= n * (mass_ratio_2 * delta);
-                    if (!object_2.pinned)
-                         object_2.position += n * (mass_ratio_1 * delta);
                 }
             }
         }
@@ -435,6 +415,15 @@ private:
                 if (obj.position.y > (950 - obj.radius)) {
                     obj.position.y = 950 - obj.radius;
                     //obj.position_last.y = obj.position.y + v.y * bounce;
+
+                    if (obj.type == OBSIDIAN) {
+                        obj.pinned = true;
+                    }
+
+                    const float dt = getStepDt();
+                    obj.setVelocity(obj.getVelocity(dt) * obj.frictionCoeff, dt);
+
+                    obj.grounded = true;
                 }
                 if (obj.position.y < (50 + obj.radius)) {
 
@@ -458,6 +447,106 @@ private:
         for (auto& obj : m_objects) {
             if(!obj.pinned)
                 obj.update(dt);
+        }
+    }
+
+    float getVectorMagnitude(sf::Vector2f vec) {
+        return sqrtf(vec.x * vec.x + vec.y + vec.y);
+    }
+
+    bool computeReaction(VerletObject& object_1, VerletObject& object_2, float mass_ratio_1, float mass_ratio_2, uint64_t& i, uint64_t& k) {
+        if (object_1.type == GAS && object_2.type == OBSIDIAN || object_1.type == OBSIDIAN && object_2.type == GAS) {
+            return false;
+        }
+        
+        if (object_1.type == WATER && object_2.type == LAVA || object_1.type == LAVA && object_2.type == WATER) {
+            float midX = (object_1.position.x + object_2.position.x) / 2.0f;
+            float midY = (object_1.position.y + object_2.position.y) / 2.0f;
+
+            generateGas(midX, midY);
+            addObject({ midX, midY }, OBSIDIAN);
+
+            m_objects.erase(m_objects.begin() + k--);
+            m_objects.erase(m_objects.begin() + i--);
+
+            return false;
+        }
+
+        if (object_1.type == GAS && object_2.type == WATER || object_1.type == WATER && object_2.type == GAS) {
+            if (object_1.type == GAS) {
+                object_1.setVelocity({ 0.0f, -200.0f }, getStepDt());
+            }
+
+            if (object_2.type == GAS) {
+                object_2.setVelocity({ 0.0f, -200.0f }, getStepDt());
+            }
+        }
+
+        if (object_1.type == OBSIDIAN && object_2.type == OBSIDIAN) {
+            if (object_1.grounded || object_2.grounded) {
+                object_1.grounded = true;
+                object_2.grounded = true;
+                object_1.pinned = true;
+                object_2.pinned = true;
+            }
+        }
+
+        if (object_1.frictionCoeff < 0.9f || object_2.frictionCoeff < 0.9f) {
+            const float dt = getStepDt();
+            if (object_1.frictionCoeff < 0.9f) {
+                sf::Vector2f currVel = object_1.getVelocity(dt);
+                object_1.setVelocity({ currVel.x * object_1.frictionCoeff, currVel.y }, dt);
+            }
+            else if (object_2.frictionCoeff < 0.9f) {
+                sf::Vector2f currVel = object_2.getVelocity(dt);
+                object_2.setVelocity({ currVel.x * object_2.frictionCoeff, currVel.y }, dt);
+            }
+        }
+
+        /*if (object_1.type == SAND && object_2.type == WATER || object_1.type == WATER && object_2.type == SAND) {
+            if (object_1.type == SAND) {
+                if (object_1.position.y <= object_2.position.y) {
+                    object_1.setVelocity({ 0.0f, 150.0f }, getStepDt());
+                }
+            }
+
+            if (object_2.type == SAND) {
+                if (object_2.position.y <= object_1.position.y) {
+                    object_2.setVelocity({ 0.0f, 150.0f }, getStepDt());
+                }
+            }
+        }*/
+
+        float massDiff = abs(object_1.mass - object_2.mass);
+        const float dt = getStepDt();
+        int randInt = rand() % 2;
+        float velX = (randInt == 0 ? 1.0f : -1.0f) * massDiff * 300.0f;
+        float velY = abs(velX) * -0.5;
+        if (object_1.type != OBSIDIAN && object_2.type != OBSIDIAN) {
+            if (object_1.mass > object_2.mass && !object_1.pinned && !object_2.pinned) {
+                if (object_1.position.y <= object_2.position.y) {
+                    object_2.setVelocity({ velX , velY }, getStepDt());
+                    object_1.setVelocity(object_1.getVelocity(dt) * mass_ratio_1, dt);
+                    return false;
+                }
+            }
+            else if (object_2.mass > object_1.mass) {
+                if (object_2.position.y <= object_1.position.y) {
+                    object_1.setVelocity({ velX ,velY }, getStepDt());
+                    object_2.setVelocity(object_2.getVelocity(dt) * mass_ratio_2, dt);
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    void generateGas(float midX, float midY) {
+        for (float x = -1.0f; x <= 1.0f; x += 0.5f) {
+            for (float y = -1.0f; y <= 1.0f; y += 0.5f) {
+                addObject({ midX + x, midY + y }, GAS);
+            }
         }
     }
 };

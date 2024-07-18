@@ -469,11 +469,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                 std::cout << "Current Type: None" << std::endl;
             }
 
+
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) {
-                brushSize += 0.5f;
+                brushSize += 1.0f;
             }
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) {
-                brushSize -= 0.5f;
+                brushSize -= 1.0f;
             }
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left) && !isLeftDown) {
                 holdLagFrame++;
@@ -490,6 +491,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                 isRightDown = false;
             }
 
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::F5)) {
+                solver.clearAll();
+            }
 
             brushSize = abs(brushSize);
 
