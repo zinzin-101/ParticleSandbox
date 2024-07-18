@@ -41,6 +41,7 @@ struct VerletObject
     bool         isFluid       = true;
     bool         grounded      = false;
     int          lifespan      = -1;
+    int          counter       = -1;
 
     VerletObject() = default;
     VerletObject(sf::Vector2f position_, float radius_, bool pin_, TYPE type_)
@@ -186,7 +187,10 @@ public:
             obj.pinned = false;
             obj.mass = 0.3f;
             obj.bounce = 0.0f;
+            obj.frictionCoeff = 0.1f;
             obj.lifespan = 10;
+            obj.isFluid = false;
+            obj.counter = 1;
             break;
         case FIRE_GAS:
             obj.color = { 150,150,150 };
@@ -427,6 +431,11 @@ private:
                         object_1.position -= n * (mass_ratio_2 * delta);
                     if (!object_2.pinned)
                         object_2.position += n * (mass_ratio_1 * delta);
+
+                    /*if (!object_1.isFluid && object_1.type != object_2.type)
+                        object_1.setVelocity({ 0,0 }, getStepDt());
+                    if (!object_2.isFluid && object_1.type != object_2.type)
+                        object_2.setVelocity({ 0,0 }, getStepDt());*/
                 }
             }
         }
@@ -524,28 +533,47 @@ private:
 
     void passiveBehaviorUpdate(VerletObject& obj, uint64_t& i) {
         const int frameNum = getFrameNum();
+        int randFrame;
+        int chance;
 
         switch (obj.type){
             case FIRE:
-                int randFrame = 12 + (1 + rand() % 48);
-                int chance = 1 + rand() % 10;
+                randFrame = 60 + (rand() % 61);
+                chance = 1 + rand() % 1000;
 
-                if (chance > 9 && frameNum % randFrame == 0) {
-                    int randX = -50 + (1 + rand() % 50);
+                if (chance > 950 && frameNum % randFrame == 0) {
+                    int randX = -50 + (1 + rand() % 100);
                     int randY = -1 * (50 + rand() % 50);
 
                     VerletObject& tempObj = addObject(obj.position, FIRE_GAS);
                     tempObj.setVelocity({ (float)randX, (float)randY }, getStepDt());
                 }
 
-                if (frameNum % 1200 == 0) {
+                if (frameNum % 300 == 0) {
                     obj.lifespan--;
 
                     if (obj.lifespan == 0) {
                         m_objects.erase(m_objects.begin() + i--);
                     }
+
+                    if (obj.counter > 0) {
+                        obj.counter--;
+                    }
                 }
 
+                break;
+            case LAVA:
+                randFrame = 60 + (rand() % 61);
+                chance = 1 + rand() % 1000;
+
+                if (chance > 950 && frameNum % randFrame == 0) {
+                    int randX = -150 + (rand() % 301);
+                    int randY = -1 * (50 + rand() % 151);
+
+                    VerletObject& tempObj = addObject(obj.position, FIRE);
+                    tempObj.setVelocity({ (float)randX, (float)randY }, getStepDt());
+                    tempObj.lifespan = 2;
+                }
                 break;
         }
     }
@@ -564,6 +592,9 @@ private:
             return false;
         }
         if (object_1.type == FIRE_GAS && object_2.type == FIRE_GAS) {
+            return false;
+        }
+        if (object_1.type == FIRE && object_2.type == LAVA || object_1.type == LAVA && object_2.type == FIRE) {
             return false;
         }
         
@@ -604,15 +635,17 @@ private:
 
         if (object_1.type == WOOD && object_2.type == FIRE || object_1.type == FIRE && object_2.type == WOOD) {
             int randInt = 1 + rand() % 1000;
-            if (randInt > 900) {
+            if (randInt > 900 && (object_1.counter == 0 || object_2.counter == 0)) {
                 sf::Vector2f pos1 = object_1.position;
                 sf::Vector2f pos2 = object_2.position;
                 if (object_1.type == WOOD) {
                     generateFire(pos1);
+                    generateDarkGas(pos1.x, pos1.y);
                 }
 
                 if (object_2.type == WOOD) {
                     generateFire(pos2);
+                    generateDarkGas(pos2.x, pos2.y);
                 }
 
                 m_objects.erase(m_objects.begin() + k--);
@@ -624,15 +657,17 @@ private:
 
         if (object_1.type == WOOD && object_2.type == FIRE_GAS || object_1.type == FIRE_GAS && object_2.type == WOOD) {
             int randInt = 1 + rand() % 1000;
-            if (randInt > 995) {
+            if (randInt > 980 && (object_1.counter == 0 || object_2.counter == 0)) {
                 sf::Vector2f pos1 = object_1.position;
                 sf::Vector2f pos2 = object_2.position;
                 if (object_1.type == WOOD) {
                     generateFire(pos1);
+                    generateDarkGas(pos1.x, pos1.y - object_1.radius * 2.0f);
                 }
 
                 if (object_2.type == WOOD) {
                     generateFire(pos2);
+                    generateDarkGas(pos2.x, pos2.y - object_2.radius * 2.0f);
                 }
 
                 m_objects.erase(m_objects.begin() + k--);
@@ -663,20 +698,6 @@ private:
             }
         }
 
-        /*if (object_1.type == SAND && object_2.type == WATER || object_1.type == WATER && object_2.type == SAND) {
-            if (object_1.type == SAND) {
-                if (object_1.position.y <= object_2.position.y) {
-                    object_1.setVelocity({ 0.0f, 150.0f }, getStepDt());
-                }
-            }
-
-            if (object_2.type == SAND) {
-                if (object_2.position.y <= object_1.position.y) {
-                    object_2.setVelocity({ 0.0f, 150.0f }, getStepDt());
-                }
-            }
-        }*/
-
         float massDiff = abs(object_1.mass - object_2.mass);
         const float dt = getStepDt();
         int randInt = rand() % 2;
@@ -690,7 +711,7 @@ private:
                     return false;
                 }
             }
-            else if (object_2.mass > object_1.mass) {
+            else if (object_2.mass > object_1.mass && !object_1.pinned && !object_2.pinned) {
                 if (object_2.position.y <= object_1.position.y && object_1.isFluid) {
                     object_1.setVelocity({ velX ,velY }, getStepDt());
                     object_2.setVelocity(object_2.getVelocity(dt) * mass_ratio_2, dt);
