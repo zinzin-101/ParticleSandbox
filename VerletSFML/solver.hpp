@@ -200,6 +200,7 @@ public:
             obj.mass = 0.2f;
             obj.bounce = 0.0f;
             obj.lifespan = 8;
+            obj.counter = 1;
             break;
         default:
             obj.color = sf::Color::White;
@@ -320,6 +321,25 @@ public:
             sf::Vector2f moveVec = {   (float)currentMousePos.x - (float)lastMousePos.x,
                                         (float)currentMousePos.y - (float)lastMousePos.y 
                                     };
+            sf::Vector2f velocityVec = moveVec / getStepDt();
+            float distance = sqrt(target.x * target.x + target.y * target.y);
+            if (distance < 250) {
+                obj.accelerate(velocityVec * 10.0f);
+            }
+        }
+    }
+
+    void applyForce(sf::Vector2f currentPos) {
+        for (VerletObject& obj : m_objects) {
+            if (obj.pinned) {
+                continue;
+            }
+
+            sf::Vector2f targetPos = { (float)currentPos.x, (float)currentPos.y };
+            sf::Vector2f target = targetPos - obj.position;
+            sf::Vector2f moveVec = { (float)currentPos.x - (float)lastMousePos.x,
+                                        (float)currentPos.y - (float)lastMousePos.y
+            };
             sf::Vector2f velocityVec = moveVec / getStepDt();
             float distance = sqrt(target.x * target.x + target.y * target.y);
             if (distance < 250) {
@@ -555,6 +575,10 @@ private:
 
                     if (obj.lifespan == 0) {
                         m_objects.erase(m_objects.begin() + i--);
+                    }
+
+                    if (obj.counter > 0) {
+                        obj.counter--;
                     }
                 }
                 break;

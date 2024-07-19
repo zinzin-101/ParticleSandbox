@@ -445,6 +445,19 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                 isRightClick = false;
             }
 
+            for (int i = 0; i < MAXPOINTS; i++) {
+                if (points[i][0] >= 0) {
+                    sf::Vector2f touchPoint = { (float)points[i][0], (float)points[i][1] };
+                    if (selectedType == NONE) {
+                        //
+                        //
+                    }
+                    else if (frameNum % holdLagFrame == 0) {
+                        InstantiateObject(touchPoint, selectedType);
+                    }
+                }
+            }
+
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num1)) {
                 selectedType = SAND;
             }
