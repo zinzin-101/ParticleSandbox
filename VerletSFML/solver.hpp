@@ -145,7 +145,7 @@ public:
             obj.pinned = false;
             obj.mass = 1.25f;
             obj.bounce = 0.0f;
-            obj.frictionCoeff = 0.7f;
+            obj.frictionCoeff = 0.8f;
             break;
         case GAS:
             obj.color = { 200,200,200 };
@@ -153,6 +153,7 @@ public:
             obj.pinned = false;
             obj.mass = 0.1f;
             obj.bounce = 0.0f;
+            obj.lifespan = 8;
             break;
         case OBSIDIAN:
             obj.color = {50,50,50};
@@ -198,6 +199,7 @@ public:
             obj.pinned = false;
             obj.mass = 0.2f;
             obj.bounce = 0.0f;
+            obj.lifespan = 8;
             break;
         default:
             obj.color = sf::Color::White;
@@ -537,6 +539,26 @@ private:
         int chance;
 
         switch (obj.type){
+            case GAS:
+                if (frameNum % 300 == 0) {
+                    obj.lifespan--;
+
+                    if (obj.lifespan == 0) {
+                        m_objects.erase(m_objects.begin() + i--);
+                    }
+                }
+                break;
+
+            case FIRE_GAS:
+                if (frameNum % 300 == 0) {
+                    obj.lifespan--;
+
+                    if (obj.lifespan == 0) {
+                        m_objects.erase(m_objects.begin() + i--);
+                    }
+                }
+                break;
+
             case FIRE:
                 randFrame = 60 + (rand() % 61);
                 chance = 1 + rand() % 1000;
@@ -560,8 +582,8 @@ private:
                         obj.counter--;
                     }
                 }
-
                 break;
+
             case LAVA:
                 randFrame = 60 + (rand() % 61);
                 chance = 1 + rand() % 1000;
@@ -682,6 +704,18 @@ private:
                 object_1.grounded = true;
                 object_2.grounded = true;
                 object_1.pinned = true;
+                object_2.pinned = true;
+            }
+        }
+
+        if (object_1.type == OBSIDIAN || object_2.type == OBSIDIAN) {
+            if (object_2.pinned && object_1.type == OBSIDIAN) {
+                object_1.grounded = true;
+                object_1.pinned = true;
+            }
+
+            if (object_1.pinned && object_2.type == OBSIDIAN) {
+                object_2.grounded = true;
                 object_2.pinned = true;
             }
         }
