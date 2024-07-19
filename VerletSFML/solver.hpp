@@ -696,6 +696,15 @@ private:
                 sf::Vector2f currVel = object_2.getVelocity(dt);
                 object_2.setVelocity({ currVel.x * object_2.frictionCoeff, currVel.y }, dt);
             }
+
+            if (object_1.frictionCoeff < 0.9f && object_2.pinned) {
+                sf::Vector2f currVel = object_1.getVelocity(dt);
+                object_1.setVelocity(currVel * object_1.frictionCoeff, dt);
+            }
+            else if (object_2.frictionCoeff < 0.9f && object_1.pinned) {
+                sf::Vector2f currVel = object_2.getVelocity(dt);
+                object_2.setVelocity(currVel * object_2.frictionCoeff, dt);
+            }
         }
 
         float massDiff = abs(object_1.mass - object_2.mass);
