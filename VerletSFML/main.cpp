@@ -182,10 +182,11 @@ static void InstantiateObject(sf::Vector2f pos, TYPE type) {
     objIndex++;
 }
 
-static void InstantiateSpawner(sf::Vector2f pos, TYPE type, int delay) {
+static void InstantiateSpawner(sf::Vector2f pos, TYPE type, int delay, float radius) {
     VerletObject& spawner = solver.addObject(pos, SPAWNER);
     spawner.spawnerType = type;
     spawner.counter = delay;
+    spawner.bounce = radius;
 }
 
 static void InstantiateBrush(sf::Vector2f pos, TYPE type, float size) {
@@ -414,6 +415,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
     bool isDeleteMode = false;
     bool isDDown = false;
+
+    bool isHDown = false;
  
     Msg.message = ~WM_QUIT;
     while (Msg.message != WM_QUIT)
@@ -466,6 +469,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                     solver.deleteBrush(brushSize);
                 }
                 else if (selectedType == NONE) {
+                    sf::Vector2i mousePosInt = solver.getCurrentMousePos();
+                    sf::Vector2f mousePosF = { (float)mousePosInt.x, (float)mousePosInt.y };
+                    //solver.applyCentripetalForce(mousePosF, brushSize);
                     solver.applyMouseForce();
                 }
                 else if (frameNum % holdLagFrame == 0 || !isRightClick) {
@@ -485,7 +491,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                 if (!isMidClick) {
                     sf::Vector2i mousePosInt = solver.getCurrentMousePos();
                     sf::Vector2f mousePosF = { (float)mousePosInt.x, (float)mousePosInt.y };
-                    InstantiateSpawner(mousePosF, selectedType, holdLagFrame);
+                    InstantiateSpawner(mousePosF, selectedType, holdLagFrame, brushSize * 10.0f);
                 }
                 isMidClick = true;
             }
@@ -501,6 +507,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                     }
                     else if (selectedType == NONE) {
                         solver.applyForce(touchPoint);
+                        //solver.applyCentripetalForce(touchPoint, brushSize);
                     }
                     else if (frameNum % holdLagFrame == 0) {
                         InstantiateObject(touchPoint, selectedType);
@@ -573,6 +580,32 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::F5)) {
                 solver.clearAll();
+            }
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::E)) {
+                if (isDeleteMode) {
+                    solver.deleteObjectsOfType(selectedType);
+                }
+            }
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::S) && sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
+                if (isDeleteMode) {
+                    solver.deleteObjectsOfType(SPAWNER);
+                }
+            }
+            else if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) {
+                if (isDeleteMode) {
+                    solver.deleteSpawersOfType(selectedType);
+                }
+            }
+
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::H)) {
+                if (isDeleteMode && !isHDown) {
+                    solver.clearHalf();
+                }
+
+                isHDown = true;
+            }
+            else {
+                isHDown = false;
             }
 
             brushSize = abs(brushSize);

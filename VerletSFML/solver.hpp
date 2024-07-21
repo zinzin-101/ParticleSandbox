@@ -358,8 +358,53 @@ public:
             float dist2 = v.x * v.x + v.y * v.y;
             float dist = sqrt(dist2);
             if (dist < 150) {
-                obj.accelerate({ (float)60.0f * currentPos.x, (float)60.0f * currentPos.y });
+                obj.accelerate(v * 60.0f);
             }
+        }
+    }
+
+    void applyPushForce(sf::Vector2f currentPos, float radius) {
+        for (VerletObject& obj : m_objects) {
+            if (obj.pinned) {
+                continue;
+            }
+            sf::Vector2f v = obj.position - currentPos;
+            float dist2 = v.x * v.x + v.y * v.y;
+            float dist = sqrt(dist2);
+            if (dist < radius) {
+                //obj.setVelocity({ 0,0 }, getStepDt());
+                obj.addVelocity(v * 10.0f * ((radius - dist) / radius), getStepDt());
+            }
+        }
+    }
+
+    void applyCentripetalForce(sf::Vector2f currentPos, float radius) {
+        for (VerletObject& obj : m_objects) {
+            if (obj.pinned) {
+                continue;
+            }
+            
+            sf::Vector2f v = currentPos - obj.position;
+            float dist2 = v.x * v.x + v.y * v.y;
+            float dist = sqrt(dist2);
+            
+            if (dist < radius * 4.0f) {
+                obj.addVelocity(v * ((radius * 4.0f - dist) / (radius * 4.0f)), getStepDt());
+
+                sf::Vector2f oldVel = obj.getVelocity(getStepDt());
+                sf::Vector2f newVel = { -oldVel.y, oldVel.x };
+                obj.setVelocity({ 0,0 }, getStepDt());
+                obj.setVelocity(newVel * 10.0f, getStepDt());
+            }
+            /*if (dist < radius) {
+                sf::Vector2f oldVel = obj.getVelocity(getStepDt());
+                sf::Vector2f newVel = { -oldVel.y, oldVel.x };
+                obj.setVelocity({ 0,0 }, getStepDt());
+                obj.setVelocity(newVel, getStepDt());
+
+                sf::Vector2f newVec = obj.position - currentPos;
+                obj.addVelocity(newVec * 10.0f * ((radius - dist) / radius), getStepDt());
+            }*/
         }
     }
 
@@ -386,6 +431,48 @@ public:
             float distance = sqrt((pos.x - obj.position.x) * (pos.x - obj.position.x)
                 + (pos.y - obj.position.y) * (pos.y - obj.position.y));
             if (distance < radius) {
+                m_objects.erase(m_objects.begin() + i--);
+            }
+        }
+    }
+
+    void deleteObjectsOfType(TYPE type) {
+        for (uint64_t i{ 0 }; i < m_objects.size(); i++) {
+            VerletObject& obj = m_objects[i];
+
+            if (type == GAS) {
+                if (obj.type == FIRE_GAS || obj.type == GAS) {
+                    m_objects.erase(m_objects.begin() + i--);
+                }
+                continue;
+            }
+
+            if (obj.type == type) {
+                m_objects.erase(m_objects.begin() + i--);
+
+            }
+        }
+    }
+
+    void deleteSpawersOfType(TYPE type) {
+        for (uint64_t i{ 0 }; i < m_objects.size(); i++) {
+            VerletObject& obj = m_objects[i];
+
+            if (obj.spawnerType == type && obj.type == SPAWNER) {
+                m_objects.erase(m_objects.begin() + i--);
+
+            }
+        }
+    }
+
+    void clearHalf() {
+        for (uint64_t i{ 0 }; i < m_objects.size(); i++) {
+            if (m_objects[i].type == SPAWNER) {
+                continue;
+            }
+
+            int randNum = rand() % 2;
+            if (randNum == 0) {
                 m_objects.erase(m_objects.begin() + i--);
             }
         }
@@ -585,8 +672,16 @@ private:
         }
     }
 
+    float getVectorMagnitudeSqr(sf::Vector2f vec) {
+        return vec.x * vec.x + vec.y + vec.y;
+    }
+
     float getVectorMagnitude(sf::Vector2f vec) {
         return sqrtf(vec.x * vec.x + vec.y + vec.y);
+    }
+
+    sf::Vector2f getNormalizedVector(sf::Vector2f v) {
+        return v / getVectorMagnitude(v);
     }
 
     void passiveBehaviorUpdate(VerletObject& obj, uint64_t& i) {
@@ -660,6 +755,7 @@ private:
 
             case SPAWNER:
                 if (obj.spawnerType == NONE) {
+                    applyPushForce(obj.position, obj.bounce);
                     break;
                 }
                 if (frameNum % obj.counter == 0) {
