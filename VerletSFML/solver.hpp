@@ -20,8 +20,11 @@ enum TYPE {
     WOOD,
     FIRE,
     FIRE_GAS,
-    NONE
+    NONE,
+    SPAWNER
 };
+
+float typeRadiusArr[11] = { 6.0f, 3.5f, 10.0f, 4.0f, 1.0f, 4.0f, 4.0f, 10.0f, 1.5f, 1.0f, 999.0f };
 
 sf::Vector2i currentMousePos;
 sf::Vector2i lastMousePos;
@@ -42,6 +45,7 @@ struct VerletObject
     bool         grounded      = false;
     int          lifespan      = -1;
     int          counter       = -1;
+    TYPE         spawnerType   = NONE;
 
     VerletObject() = default;
     VerletObject(sf::Vector2f position_, float radius_, bool pin_, TYPE type_)
@@ -202,6 +206,11 @@ public:
             obj.lifespan = 8;
             obj.counter = 1;
             break;
+        case SPAWNER:
+            obj.color = { 101, 2, 158 };
+            obj.radius = 5.0f;
+            obj.pinned = true;
+            break;
         default:
             obj.color = sf::Color::White;
             obj.radius = 1.0f;
@@ -211,6 +220,17 @@ public:
             break;
         }
         return m_objects.emplace_back(obj);
+    }
+
+    void addObjectCluster(sf::Vector2f pos, TYPE type, float size) {
+        float halfSize = size / 2.0f;
+        float increment = 2.0 * typeRadiusArr[type] - 0.1f;
+        for (float i = -halfSize; i <= halfSize; i += increment) {
+            for (float j = -halfSize; j <= halfSize; j += increment) {
+                sf::Vector2f temp = { i,j };
+                addObject(pos + temp, type);
+            }
+        }
     }
 
     Link& addLink(int obj1, int obj2) 
@@ -226,7 +246,7 @@ public:
         const float step_dt = getStepDt();
         for (uint32_t i{m_sub_steps}; i--;) {
             applyGravity();
-            applyTouchForce();
+            //applyTouchForce();
             checkCollisions(step_dt);
             applyConstraint(step_dt);
             applyLinkConstraint(step_dt);
@@ -334,16 +354,11 @@ public:
             if (obj.pinned) {
                 continue;
             }
-
-            sf::Vector2f targetPos = { (float)currentPos.x, (float)currentPos.y };
-            sf::Vector2f target = targetPos - obj.position;
-            sf::Vector2f moveVec = { (float)currentPos.x - (float)lastMousePos.x,
-                                        (float)currentPos.y - (float)lastMousePos.y
-            };
-            sf::Vector2f velocityVec = moveVec / getStepDt();
-            float distance = sqrt(target.x * target.x + target.y * target.y);
-            if (distance < 250) {
-                obj.accelerate(velocityVec * 10.0f);
+            sf::Vector2f v = currentPos - obj.position;
+            float dist2 = v.x * v.x + v.y * v.y;
+            float dist = sqrt(dist2);
+            if (dist < 150) {
+                obj.accelerate({ (float)60.0f * currentPos.x, (float)60.0f * currentPos.y });
             }
         }
     }
@@ -358,6 +373,18 @@ public:
 
             float distance = sqrt((currentMousePos.x - obj.position.x) * (currentMousePos.x - obj.position.x)
                                 + (currentMousePos.y - obj.position.y) * (currentMousePos.y - obj.position.y));
+            if (distance < radius) {
+                m_objects.erase(m_objects.begin() + i--);
+            }
+        }
+    }
+
+    void deleteBrush(float radius, sf::Vector2f pos) {
+        for (uint64_t i = 0; i < m_objects.size(); i++) {
+            VerletObject& obj = m_objects[i];
+
+            float distance = sqrt((pos.x - obj.position.x) * (pos.x - obj.position.x)
+                + (pos.y - obj.position.y) * (pos.y - obj.position.y));
             if (distance < radius) {
                 m_objects.erase(m_objects.begin() + i--);
             }
@@ -426,8 +453,17 @@ private:
         for (uint64_t i{ 0 }; i < m_objects.size(); i++) {
             VerletObject& object_1 = m_objects[i];
             // Iterate on object involved in new collision pairs
+
+            if (object_1.type == SPAWNER) {
+                continue;
+            }
+
             for (uint64_t k{i + 1}; k < m_objects.size(); k++) {
                 VerletObject&      object_2 = m_objects[k];
+
+                if (object_2.type == SPAWNER) {
+                    continue;
+                }
 
                 const sf::Vector2f v        = object_1.position - object_2.position;
                 const float        dist2    = v.x * v.x + v.y * v.y;
@@ -619,6 +655,18 @@ private:
                     VerletObject& tempObj = addObject(obj.position, FIRE);
                     tempObj.setVelocity({ (float)randX, (float)randY }, getStepDt());
                     tempObj.lifespan = 2;
+                }
+                break;
+
+            case SPAWNER:
+                if (obj.spawnerType == NONE) {
+                    break;
+                }
+                if (frameNum % obj.counter == 0) {
+                    VerletObject& tempObj = addObject(obj.position, obj.spawnerType);
+                    int randNum = rand() % 2;
+                    float offset = (randNum == 0 ? -0.1f : 0.1f);
+                    tempObj.position.x += offset;
                 }
                 break;
         }

@@ -16,7 +16,7 @@
 const char g_szClassName[] = "myWindowClass";
 
 std::stringstream ss;
-sf::Text text[MAXPOINTS];
+//sf::Text text[MAXPOINTS];
 // You will use this array to track touch points
 int points[MAXPOINTS][2];
 int last_points[MAXPOINTS][2];
@@ -182,14 +182,22 @@ static void InstantiateObject(sf::Vector2f pos, TYPE type) {
     objIndex++;
 }
 
+static void InstantiateSpawner(sf::Vector2f pos, TYPE type, int delay) {
+    VerletObject& spawner = solver.addObject(pos, SPAWNER);
+    spawner.spawnerType = type;
+    spawner.counter = delay;
+}
+
 static void InstantiateBrush(sf::Vector2f pos, TYPE type, float size) {
-    float halfSize = size / 2.0f;
+    /*float halfSize = size / 2.0f;
     for (float i = -halfSize; i <= halfSize; i += 3.0f) {
         for (float j = -halfSize; j <= halfSize; j += 3.0f) {
             sf::Vector2f temp = { i,j };
             InstantiateObject(pos + temp, type);
         }
-    }
+    }*/
+
+    solver.addObjectCluster(pos, type, size);
 }
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
@@ -281,28 +289,52 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     if (!font.loadFromFile("THSarabunNew.ttf")) {/* error...*/ }
     //sf::Text text;
     //text.setFont(font); // font is a sf::Font
-    //text.setString(L"สระบอล");
+    //text.setString("ball");
     //text.setCharacterSize(100); // in pixels, not points!
     //text.setFillColor(sf::Color::White);
-    //text.setPosition(480, 50);
+    //text.setPosition(480, 500);
+
+    sf::Text typeText;
+    typeText.setFont(font);
+    typeText.setCharacterSize(50);
+    typeText.setFillColor(sf::Color::White);
+    typeText.setPosition(60, 30);
+
+    sf::Text speedText;
+    speedText.setFont(font);
+    speedText.setCharacterSize(50);
+    speedText.setFillColor(sf::Color::White);
+    speedText.setPosition(60, 80);
+
+    sf::Text spreadText;
+    spreadText.setFont(font);
+    spreadText.setCharacterSize(50);
+    spreadText.setFillColor(sf::Color::White);
+    spreadText.setPosition(60, 130);
+
+    sf::Text modeText;
+    modeText.setFont(font);
+    modeText.setCharacterSize(50);
+    modeText.setFillColor(sf::Color::White);
+    modeText.setPosition(60, 180);
 
 
-    for (int i = 0; i < MAXPOINTS; i++) {
-        // select the font
-        text[i].setFont(font); // font is a sf::Font
+    //for (int i = 0; i < MAXPOINTS; i++) {
+    //    // select the font
+    //    text[i].setFont(font); // font is a sf::Font
 
-        // set the string to display
-        ss << i;
-        text[i].setString(ss.str());
-        ss.str("");
+    //    // set the string to display
+    //    ss << i;
+    //    text[i].setString(ss.str());
+    //    ss.str("");
 
-        // set the character size
-        text[i].setCharacterSize(64); // in pixels, not points!
+    //    // set the character size
+    //    text[i].setCharacterSize(64); // in pixels, not points!
 
-        // set the color
-        text[i].setFillColor(sf::Color::Green);
-        //text.setPosition(20, 100);
-    }
+    //    // set the color
+    //    text[i].setFillColor(sf::Color::Green);
+    //    //text.setPosition(20, 100);
+    //}
 
     ShowWindow(hwnd, nCmdShow);
     UpdateWindow(hwnd);
@@ -372,12 +404,16 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
     bool isLeftClick = false;
     bool isRightClick = false;
+    bool isMidClick = false;
     TYPE selectedType = SAND;
     float brushSize = 5.0f;
     int holdLagFrame = 5;
 
     bool isLeftDown = false;
     bool isRightDown = false;
+
+    bool isDeleteMode = false;
+    bool isDDown = false;
  
     Msg.message = ~WM_QUIT;
     while (Msg.message != WM_QUIT)
@@ -406,7 +442,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
             solver.updateMousePos(sf::Mouse::getPosition(window));
             solver.updateFrameNum(frameNum);
             if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
-                if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
+                if (isDeleteMode) {
                     solver.deleteBrush(5.0f);
                 }
                 else if (selectedType == NONE) {
@@ -426,7 +462,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
             }
 
             if (sf::Mouse::isButtonPressed(sf::Mouse::Right)) {
-                if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
+                if (isDeleteMode) {
                     solver.deleteBrush(brushSize);
                 }
                 else if (selectedType == NONE) {
@@ -445,50 +481,74 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                 isRightClick = false;
             }
 
+            if (sf::Mouse::isButtonPressed(sf::Mouse::Middle)) {
+                if (!isMidClick) {
+                    sf::Vector2i mousePosInt = solver.getCurrentMousePos();
+                    sf::Vector2f mousePosF = { (float)mousePosInt.x, (float)mousePosInt.y };
+                    InstantiateSpawner(mousePosF, selectedType, holdLagFrame);
+                }
+                isMidClick = true;
+            }
+            else {
+                isMidClick = false;
+            }
+
             for (int i = 0; i < MAXPOINTS; i++) {
-                if (points[i][0] >= 0) {
+                if (points[i][0] >= 0 && points[i][1] >= 0) {
                     sf::Vector2f touchPoint = { (float)points[i][0], (float)points[i][1] };
-                    if (selectedType == NONE) {
-                        //
-                        //
+                    if (isDeleteMode) {
+                        solver.deleteBrush(brushSize, touchPoint);
+                    }
+                    else if (selectedType == NONE) {
+                        solver.applyForce(touchPoint);
                     }
                     else if (frameNum % holdLagFrame == 0) {
                         InstantiateObject(touchPoint, selectedType);
                     }
                 }
             }
-
+    
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num1)) {
                 selectedType = SAND;
             }
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num2)) {
+            else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num2)) {
                 selectedType = WATER;
             }
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num3)) {
+            else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num3)) {
                 selectedType = CONCRETE;
             }
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num4)) {
+            else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num4)) {
                 selectedType = LAVA;
             }
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num5)) {
+            else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num5)) {
                 selectedType = GAS;
             }
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num6)) {
+            else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num6)) {
                 selectedType = OBSIDIAN;
             }
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num7)) {
+            else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num7)) {
                 selectedType = DIRT;
             }
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num8)) {
+            else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num8)) {
                 selectedType = WOOD;
             }
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num9)) {
+            else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num9)) {
                 selectedType = FIRE;
             }
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num0)) {
+            else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num0)) {
                 selectedType = NONE;
             }
 
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
+                if (!isDDown) {
+                    isDeleteMode = !isDeleteMode;
+                }
+
+                isDDown = true;
+            }
+            else {
+                isDDown = false;
+            }
 
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) {
                 brushSize += 1.0f;
@@ -524,7 +584,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
             solver.update();
 
             window.clear(sf::Color::White);
-                renderer.render(solver);
+            renderer.render(solver);
                 
                 /*for (int i = 0; i < MAXPOINTS; i++) {
                     if (points[i][0] >= 0) {
@@ -533,6 +593,65 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                     }
 
                 }*/
+
+            std::ostringstream ss;
+            ss << "Type: ";
+            switch (selectedType) {
+                case SAND:
+                    ss << "Sand";
+                    break;
+                case WATER:
+                    ss << "Water";
+                    break;
+                case CONCRETE:
+                    ss << "Concrete";
+                    break;
+                case LAVA:
+                    ss << "Lava";
+                    break;
+                case GAS:
+                    ss << "Steam";
+                    break;
+                case OBSIDIAN:
+                    ss << "Obsidian";
+                    break;
+                case DIRT:
+                    ss << "Dirt";
+                    break;
+                case WOOD:
+                    ss << "Wood";
+                    break;
+                case FIRE:
+                    ss << "Fire";
+                    break;
+                case NONE:
+                    ss << "Force";
+                    break;
+            }
+            typeText.setString(ss.str());
+
+            std::ostringstream ss2;
+            ss2 << "Speed: " << (float)(60.0f / (holdLagFrame * 10.0f));
+            speedText.setString(ss2.str());
+
+            std::ostringstream ss3;
+            ss3 << "Spread: " << brushSize;
+            spreadText.setString(ss3.str());
+
+            std::ostringstream ss4;
+            ss4 << "Mode: ";
+            if (isDeleteMode) {
+                ss4 << "Delete";
+            }
+            else {
+                ss4 << "Spawn";
+            }
+            modeText.setString(ss4.str());
+
+            window.draw(typeText);
+            window.draw(speedText);
+            window.draw(spreadText);
+            window.draw(modeText);
 
             window.display();
 
