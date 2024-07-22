@@ -233,7 +233,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     hwnd = CreateWindowEx(
         WS_EX_CLIENTEDGE,
         (LPCWSTR)g_szClassName,
-        L"App name",
+        L"Particle Simulation",
         WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, CW_USEDEFAULT, 1500, 1000,
         NULL, NULL, hInstance, NULL);
@@ -417,6 +417,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     bool isDDown = false;
 
     bool isHDown = false;
+
+    bool isPeriodDown = false;
+    bool isCommaDown = false;
  
     Msg.message = ~WM_QUIT;
     while (Msg.message != WM_QUIT)
@@ -451,6 +454,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                 else if (selectedType == NONE) {
                     solver.applyMouseForce();
                 }
+                else if (selectedType == BLACKHOLE) {
+                    sf::Vector2i mousePosInt = solver.getCurrentMousePos();
+                    sf::Vector2f mousePosF = { (float)mousePosInt.x, (float)mousePosInt.y };
+                    InstantiateSpawner(mousePosF, selectedType, holdLagFrame, brushSize);
+                }
                 else if (frameNum % holdLagFrame == 0 || !isLeftClick) {
                     sf::Vector2i mousePosInt = solver.getCurrentMousePos();
                     sf::Vector2f mousePosF = { (float)mousePosInt.x, (float)mousePosInt.y };
@@ -471,8 +479,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                 else if (selectedType == NONE) {
                     sf::Vector2i mousePosInt = solver.getCurrentMousePos();
                     sf::Vector2f mousePosF = { (float)mousePosInt.x, (float)mousePosInt.y };
-                    //solver.applyCentripetalForce(mousePosF, brushSize);
-                    solver.applyMouseForce();
+                    solver.applyCentripetalForce(mousePosF, brushSize, (float)(60.0f / (holdLagFrame * 10.0f)));
+                    //solver.applyMouseForce();
+                }
+                else if (selectedType == BLACKHOLE) {
+                    sf::Vector2i mousePosInt = solver.getCurrentMousePos();
+                    sf::Vector2f mousePosF = { (float)mousePosInt.x, (float)mousePosInt.y };
+                    InstantiateSpawner(mousePosF, selectedType, holdLagFrame, brushSize);
                 }
                 else if (frameNum % holdLagFrame == 0 || !isRightClick) {
                     sf::Vector2i mousePosInt = solver.getCurrentMousePos();
@@ -491,7 +504,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                 if (!isMidClick) {
                     sf::Vector2i mousePosInt = solver.getCurrentMousePos();
                     sf::Vector2f mousePosF = { (float)mousePosInt.x, (float)mousePosInt.y };
-                    InstantiateSpawner(mousePosF, selectedType, holdLagFrame, brushSize * 10.0f);
+                    InstantiateSpawner(mousePosF, selectedType, holdLagFrame, (selectedType == BLACKHOLE ? brushSize : brushSize * 10.0f));
                 }
                 isMidClick = true;
             }
@@ -508,6 +521,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                     else if (selectedType == NONE) {
                         solver.applyForce(touchPoint);
                         //solver.applyCentripetalForce(touchPoint, brushSize);
+                    }
+                    else if (selectedType == BLACKHOLE) {
+                        sf::Vector2i mousePosInt = solver.getCurrentMousePos();
+                        sf::Vector2f mousePosF = { (float)mousePosInt.x, (float)mousePosInt.y };
+                        InstantiateSpawner(mousePosF, selectedType, holdLagFrame, brushSize);
                     }
                     else if (frameNum % holdLagFrame == 0) {
                         InstantiateObject(touchPoint, selectedType);
@@ -563,15 +581,19 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) {
                 brushSize -= 1.0f;
             }
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left) && !isLeftDown) {
-                holdLagFrame++;
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
+                if (!isLeftDown) {
+                    holdLagFrame++;
+                }
                 isLeftDown = true;
             }
             else {
                 isLeftDown = false;
             }
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right) && !isRightDown) {
-                holdLagFrame--;
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) {
+                if (!isRightDown) {
+                    holdLagFrame--;
+                }
                 isRightDown = true;
             }
             else {
@@ -608,6 +630,39 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                 isHDown = false;
             }
 
+            int nextType = selectedType;
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Comma)) {
+                if (!isCommaDown) {
+                    nextType--;
+                    if (nextType < 0) {
+                        nextType = NUM_OF_TYPE - 1;
+                    }
+
+                    if (nextType == SPAWNER) {
+                        nextType--;
+                    }
+                }
+                isCommaDown = true;
+            }
+            else {
+                isCommaDown = false;
+            }
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Period)) {
+                if (!isPeriodDown) {
+                    nextType++;
+                    
+                    if (nextType == SPAWNER) {
+                        nextType++;
+                    }
+                }
+                isPeriodDown = true;
+            }
+            else {
+                isPeriodDown = false;
+            }
+            nextType = nextType % NUM_OF_TYPE;
+            selectedType = (TYPE)nextType;
+
             brushSize = abs(brushSize);
 
             if (holdLagFrame < 1) {
@@ -628,39 +683,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                 }*/
 
             std::ostringstream ss;
-            ss << "Type: ";
-            switch (selectedType) {
-                case SAND:
-                    ss << "Sand";
-                    break;
-                case WATER:
-                    ss << "Water";
-                    break;
-                case CONCRETE:
-                    ss << "Concrete";
-                    break;
-                case LAVA:
-                    ss << "Lava";
-                    break;
-                case GAS:
-                    ss << "Steam";
-                    break;
-                case OBSIDIAN:
-                    ss << "Obsidian";
-                    break;
-                case DIRT:
-                    ss << "Dirt";
-                    break;
-                case WOOD:
-                    ss << "Wood";
-                    break;
-                case FIRE:
-                    ss << "Fire";
-                    break;
-                case NONE:
-                    ss << "Force";
-                    break;
-            }
+            ss << "Type: " << typeString[selectedType];
             typeText.setString(ss.str());
 
             std::ostringstream ss2;

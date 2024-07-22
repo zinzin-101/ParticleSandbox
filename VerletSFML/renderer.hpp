@@ -47,6 +47,13 @@ public:
         for (const auto& obj : objects) {
             circle.setPosition(obj.position);
             circle.setScale(obj.radius, obj.radius);
+
+            /*if (obj.type == SPAWNER && obj.spawnerType == NONE) {
+                circle.setOutlineThickness(obj.radius);
+                circle.setOutlineColor(sf::Color::White);
+                circle.setFillColor(sf::Color::Transparent);
+            }*/
+
             circle.setFillColor(obj.color);
             m_target.draw(circle);
         }

@@ -6,10 +6,12 @@
 
 #include "utils/math.hpp"
 
+#define NUM_OF_TYPE 13
+
 extern int points[MAXPOINTS][2];
 extern int diff_points[MAXPOINTS][2];
 
-enum TYPE {
+const enum TYPE {
     SAND,
     WATER,
     CONCRETE,
@@ -21,10 +23,27 @@ enum TYPE {
     FIRE,
     FIRE_GAS,
     NONE,
-    SPAWNER
+    SPAWNER,
+    BLACKHOLE
 };
 
-float typeRadiusArr[11] = { 6.0f, 3.5f, 10.0f, 4.0f, 1.0f, 4.0f, 4.0f, 10.0f, 1.5f, 1.0f, 999.0f };
+const std::string typeString[NUM_OF_TYPE]{
+    "Sand",
+    "Water",
+    "Concrete",
+    "Lava",
+    "Gas",
+    "Obsidian",
+    "Dirt",
+    "Wood",
+    "Fire",
+    "Fire Gas",
+    "Force",
+    "Spawn",
+    "Blackhole"
+};
+
+float typeRadiusArr[13] = { 6.0f, 3.5f, 10.0f, 4.0f, 1.0f, 4.0f, 4.0f, 10.0f, 1.5f, 1.0f, 999.0f, 999.0f, 999.0f };
 
 sf::Vector2i currentMousePos;
 sf::Vector2i lastMousePos;
@@ -378,7 +397,7 @@ public:
         }
     }
 
-    void applyCentripetalForce(sf::Vector2f currentPos, float radius) {
+    void applyCentripetalForce(sf::Vector2f currentPos, float radius, float power) {
         for (VerletObject& obj : m_objects) {
             if (obj.pinned) {
                 continue;
@@ -387,15 +406,25 @@ public:
             sf::Vector2f v = currentPos - obj.position;
             float dist2 = v.x * v.x + v.y * v.y;
             float dist = sqrt(dist2);
-            
-            if (dist < radius * 4.0f) {
-                obj.addVelocity(v * ((radius * 4.0f - dist) / (radius * 4.0f)), getStepDt());
+            sf::Vector2f n = getNormalizedVector(v);
+                        
+            //float quadRadius = radius * 4.0f;
+            //float doubleRadius = radius * 2.0f;
 
-                sf::Vector2f oldVel = obj.getVelocity(getStepDt());
-                sf::Vector2f newVel = { -oldVel.y, oldVel.x };
-                obj.setVelocity({ 0,0 }, getStepDt());
-                obj.setVelocity(newVel * 10.0f, getStepDt());
+            sf::Vector2f acceleration = (power * 300.0f * obj.mass / (dist * 5.0f)) * n;
+            sf::Vector2f velocity = { n.y, -n.x };
+            float a = getVectorMagnitude(acceleration);
+            float speed = sqrtf((a * dist) / obj.mass);
+            velocity *= speed;
+
+            if (dist < radius * 1.5f) {
+                obj.addVelocity(velocity * 2.0f, getStepDt());
+                obj.addVelocity((obj.position.y > currentPos.y ? acceleration * 2.0f : acceleration) , getStepDt());
             }
+            else {
+                obj.addVelocity(acceleration * 75.0f, getStepDt());
+            }
+
             /*if (dist < radius) {
                 sf::Vector2f oldVel = obj.getVelocity(getStepDt());
                 sf::Vector2f newVel = { -oldVel.y, oldVel.x };
@@ -541,16 +570,16 @@ private:
             VerletObject& object_1 = m_objects[i];
             // Iterate on object involved in new collision pairs
 
-            if (object_1.type == SPAWNER) {
+            /*if (object_1.type == SPAWNER) {
                 continue;
-            }
+            }*/
 
             for (uint64_t k{i + 1}; k < m_objects.size(); k++) {
                 VerletObject&      object_2 = m_objects[k];
 
-                if (object_2.type == SPAWNER) {
+                /*if (object_2.type == SPAWNER) {
                     continue;
-                }
+                }*/
 
                 const sf::Vector2f v        = object_1.position - object_2.position;
                 const float        dist2    = v.x * v.x + v.y * v.y;
@@ -673,11 +702,11 @@ private:
     }
 
     float getVectorMagnitudeSqr(sf::Vector2f vec) {
-        return vec.x * vec.x + vec.y + vec.y;
+        return vec.x * vec.x + vec.y * vec.y;
     }
 
     float getVectorMagnitude(sf::Vector2f vec) {
-        return sqrtf(vec.x * vec.x + vec.y + vec.y);
+        return sqrtf(vec.x * vec.x + vec.y * vec.y);
     }
 
     sf::Vector2f getNormalizedVector(sf::Vector2f v) {
@@ -758,6 +787,12 @@ private:
                     applyPushForce(obj.position, obj.bounce);
                     break;
                 }
+
+                if (obj.spawnerType == BLACKHOLE) {
+                    applyCentripetalForce(obj.position, obj.bounce, (float)(60.0f / (obj.counter * 10.0f)));
+                    break;
+                }
+
                 if (frameNum % obj.counter == 0) {
                     VerletObject& tempObj = addObject(obj.position, obj.spawnerType);
                     int randNum = rand() % 2;
