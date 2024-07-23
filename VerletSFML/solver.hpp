@@ -6,7 +6,7 @@
 
 #include "utils/math.hpp"
 
-#define NUM_OF_TYPE 13
+#define NUM_OF_TYPE 14
 
 extern int points[MAXPOINTS][2];
 extern int diff_points[MAXPOINTS][2];
@@ -24,7 +24,8 @@ const enum TYPE {
     FIRE_GAS,
     NONE,
     SPAWNER,
-    BLACKHOLE
+    BLACKHOLE,
+    STRING
 };
 
 const std::string typeString[NUM_OF_TYPE]{
@@ -40,10 +41,11 @@ const std::string typeString[NUM_OF_TYPE]{
     "Fire Gas",
     "Force",
     "Spawn",
-    "Blackhole"
+    "Blackhole",
+    "String"
 };
 
-float typeRadiusArr[13] = { 6.0f, 3.5f, 10.0f, 4.0f, 1.0f, 4.0f, 4.0f, 10.0f, 1.5f, 1.0f, 999.0f, 999.0f, 999.0f };
+float typeRadiusArr[NUM_OF_TYPE] = { 6.0f, 3.5f, 10.0f, 4.0f, 1.0f, 4.0f, 4.0f, 10.0f, 1.5f, 1.0f, 999.0f, 999.0f, 999.0f, 1.0f };
 
 sf::Vector2i currentMousePos;
 sf::Vector2i lastMousePos;
@@ -229,6 +231,11 @@ public:
             obj.color = { 101, 2, 158 };
             obj.radius = 5.0f;
             obj.pinned = true;
+            break;
+        case STRING:
+            obj.color = sf::Color::White;
+            obj.radius = typeRadiusArr[STRING];
+            obj.pinned = false;
             break;
         default:
             obj.color = sf::Color::White;
@@ -441,6 +448,12 @@ public:
         return currentMousePos;
     }
 
+    sf::Vector2f getCurrentMousePosF() {
+        sf::Vector2i mousePosInt = getCurrentMousePos();
+        sf::Vector2f mousePosF = { (float)mousePosInt.x, (float)mousePosInt.y };
+        return mousePosF;
+    }
+
     void deleteBrush(float radius) {
         for (uint64_t i = 0; i < m_objects.size(); i++) {
             VerletObject& obj = m_objects[i];
@@ -509,6 +522,23 @@ public:
 
     void clearAll() {
         m_objects.clear();
+        m_links.clear();
+    }
+
+    void deleteBack() {
+        m_objects.erase(m_objects.begin() + getObjectsCount() - 1);
+    }
+
+    float getVectorMagnitudeSqr(sf::Vector2f vec) {
+        return vec.x * vec.x + vec.y * vec.y;
+    }
+
+    float getVectorMagnitude(sf::Vector2f vec) {
+        return sqrtf(vec.x * vec.x + vec.y * vec.y);
+    }
+
+    sf::Vector2f getNormalizedVector(sf::Vector2f v) {
+        return v / getVectorMagnitude(v);
     }
 
 private:
@@ -699,18 +729,6 @@ private:
                 obj.update(dt);
             passiveBehaviorUpdate(obj, i);
         }
-    }
-
-    float getVectorMagnitudeSqr(sf::Vector2f vec) {
-        return vec.x * vec.x + vec.y * vec.y;
-    }
-
-    float getVectorMagnitude(sf::Vector2f vec) {
-        return sqrtf(vec.x * vec.x + vec.y * vec.y);
-    }
-
-    sf::Vector2f getNormalizedVector(sf::Vector2f v) {
-        return v / getVectorMagnitude(v);
     }
 
     void passiveBehaviorUpdate(VerletObject& obj, uint64_t& i) {

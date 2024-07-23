@@ -177,9 +177,11 @@ static sf::Color getPinkBlue(float t)
 static Solver solver;
 
 int unsigned objIndex = 0;
-static void InstantiateObject(sf::Vector2f pos, TYPE type) {
-    solver.addObject(pos, type);
+static VerletObject& InstantiateObject(sf::Vector2f pos, TYPE type) {
+    VerletObject& obj = solver.addObject(pos, type);
     objIndex++;
+
+    return obj;
 }
 
 static void InstantiateSpawner(sf::Vector2f pos, TYPE type, int delay, float radius) {
@@ -206,6 +208,65 @@ static void InstantiateBrush(sf::Vector2f pos, TYPE type, float size) {
     }*/
 
     solver.addObjectCluster(pos, type, size);
+}
+
+bool isUpdatingString = false;
+float minStringDist = 1.0f;
+std::vector<sf::Vector2f> stringPosVec;
+
+static void startString(sf::Vector2f pos, int frameDelay) {
+    stringPosVec.push_back(pos);
+    isUpdatingString = true;
+    minStringDist = frameDelay * 10.0f;
+}
+
+static void updateString(Solver& solver, sf::Vector2f pos) {
+    sf::Vector2f vec = pos - stringPosVec[stringPosVec.size() - 1];
+    float dist = solver.getVectorMagnitude(vec);
+
+    if (dist < minStringDist) {
+        return;
+    }
+
+    sf::Vector2f normal = solver.getNormalizedVector(vec);
+    sf::Vector2f nextPos = stringPosVec[stringPosVec.size()-1] + (normal * minStringDist);
+
+    stringPosVec.push_back(nextPos);
+}
+
+static void endString(Solver& solver, float radius) {
+    uint64_t size = stringPosVec.size();
+
+    if (size < 2) {
+        stringPosVec.clear();
+        isUpdatingString = false;
+        return;
+    }
+
+    sf::Vector2f vec = stringPosVec[size - 1] - stringPosVec[size - 2];
+    sf::Vector2f normal = solver.getNormalizedVector(vec);
+    float dist = solver.getVectorMagnitude(vec);
+
+    sf::Vector2f finalVecPos = stringPosVec[size - 1] + (normal * (dist + radius));
+
+    uint64_t objIndex = solver.getObjectsCount();
+    VerletObject& firstObj = InstantiateObject(stringPosVec[0], STRING);
+    objIndex++;
+    firstObj.pinned = true;
+    for (uint64_t i = 1; i < stringPosVec.size(); i++) {
+        InstantiateObject(stringPosVec[i], STRING);
+        solver.addLink(objIndex - 1, objIndex);
+
+        objIndex++;
+    }
+
+    VerletObject& lastObj = InstantiateObject(finalVecPos, STRING);
+    solver.addLink(objIndex - 1, objIndex);
+    lastObj.radius = radius;
+    lastObj.mass = radius * 6.0f;
+
+    stringPosVec.clear();
+    isUpdatingString = false;
 }
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
@@ -240,7 +301,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     hwnd = CreateWindowEx(
         WS_EX_CLIENTEDGE,
         (LPCWSTR)g_szClassName,
-        L"Particle Simulation",
+        L"Particle Sandbox",
         WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, CW_USEDEFAULT, 1500, 1000,
         NULL, NULL, hInstance, NULL);
@@ -429,6 +490,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
     bool isPeriodDown = false;
     bool isCommaDown = false;
+
+    //bool isCDown = false;
+    //bool stringMode = false;
  
     Msg.message = ~WM_QUIT;
     while (Msg.message != WM_QUIT)
@@ -460,6 +524,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                 if (isDeleteMode) {
                     solver.deleteBrush(5.0f);
                 }
+                /*else if (stringMode) {
+                    if (!isUpdatingString) {
+                        startString(solver.getCurrentMousePosF(), holdLagFrame);
+                    }
+                    else {
+                        updateString(solver, solver.getCurrentMousePosF());
+                    }
+                }*/
                 else if (selectedType == NONE) {
                     solver.applyMouseForce();
                 }
@@ -480,6 +552,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                 isLeftClick = true;
             }
             else if (!sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
+                /*if (stringMode && isUpdatingString) {
+                    endString(solver, brushSize);
+                }*/
+
                 isLeftClick = false;
             }
 
@@ -696,6 +772,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                 holdLagFrame = 1;
             }
 
+            /*if (sf::Keyboard::isKeyPressed(sf::Keyboard::C)) {
+                if (!isCDown) {
+                    stringMode = !stringMode;
+                }
+
+                isCDown = true;
+            }
+            else {
+                isCDown = false;
+            }*/
+
             solver.update();
 
             window.clear(sf::Color::White);
@@ -726,6 +813,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
             if (isDeleteMode) {
                 ss4 << "Delete";
             }
+            /*else if (stringMode) {
+                ss4 << "String";
+            }*/
             else {
                 ss4 << "Spawn";
             }
