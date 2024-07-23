@@ -189,6 +189,13 @@ static void InstantiateSpawner(sf::Vector2f pos, TYPE type, int delay, float rad
     spawner.bounce = radius;
 }
 
+static void InstantiateSpawner(sf::Vector2f pos, TYPE type, float speed, float radius) {
+    VerletObject& spawner = solver.addObject(pos, SPAWNER);
+    spawner.spawnerType = type;
+    spawner.frictionCoeff = speed;
+    spawner.bounce = radius;
+}
+
 static void InstantiateBrush(sf::Vector2f pos, TYPE type, float size) {
     /*float halfSize = size / 2.0f;
     for (float i = -halfSize; i <= halfSize; i += 3.0f) {
@@ -408,7 +415,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     bool isMidClick = false;
     TYPE selectedType = SAND;
     float brushSize = 5.0f;
-    int holdLagFrame = 5;
+    float speed = 1.2f;
+    int holdLagFrame = (int)(6.0f / speed);
+
 
     bool isLeftDown = false;
     bool isRightDown = false;
@@ -455,9 +464,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                     solver.applyMouseForce();
                 }
                 else if (selectedType == BLACKHOLE) {
-                    sf::Vector2i mousePosInt = solver.getCurrentMousePos();
-                    sf::Vector2f mousePosF = { (float)mousePosInt.x, (float)mousePosInt.y };
-                    InstantiateSpawner(mousePosF, selectedType, holdLagFrame, brushSize);
+                    if (!isLeftClick) {
+                        sf::Vector2i mousePosInt = solver.getCurrentMousePos();
+                        sf::Vector2f mousePosF = { (float)mousePosInt.x, (float)mousePosInt.y };
+                        InstantiateSpawner(mousePosF, selectedType, speed, brushSize);
+                    }
                 }
                 else if (frameNum % holdLagFrame == 0 || !isLeftClick) {
                     sf::Vector2i mousePosInt = solver.getCurrentMousePos();
@@ -479,13 +490,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                 else if (selectedType == NONE) {
                     sf::Vector2i mousePosInt = solver.getCurrentMousePos();
                     sf::Vector2f mousePosF = { (float)mousePosInt.x, (float)mousePosInt.y };
-                    solver.applyCentripetalForce(mousePosF, brushSize, (float)(60.0f / (holdLagFrame * 10.0f)));
+                    solver.applyCentripetalForce(mousePosF, brushSize, speed);
                     //solver.applyMouseForce();
                 }
                 else if (selectedType == BLACKHOLE) {
-                    sf::Vector2i mousePosInt = solver.getCurrentMousePos();
-                    sf::Vector2f mousePosF = { (float)mousePosInt.x, (float)mousePosInt.y };
-                    InstantiateSpawner(mousePosF, selectedType, holdLagFrame, brushSize);
+                    if (!isRightClick) {
+                        sf::Vector2i mousePosInt = solver.getCurrentMousePos();
+                        sf::Vector2f mousePosF = { (float)mousePosInt.x, (float)mousePosInt.y };
+                        InstantiateSpawner(mousePosF, selectedType, speed, brushSize);
+                    }
                 }
                 else if (frameNum % holdLagFrame == 0 || !isRightClick) {
                     sf::Vector2i mousePosInt = solver.getCurrentMousePos();
@@ -504,7 +517,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                 if (!isMidClick) {
                     sf::Vector2i mousePosInt = solver.getCurrentMousePos();
                     sf::Vector2f mousePosF = { (float)mousePosInt.x, (float)mousePosInt.y };
-                    InstantiateSpawner(mousePosF, selectedType, holdLagFrame, (selectedType == BLACKHOLE ? brushSize : brushSize * 10.0f));
+                    //InstantiateSpawner(mousePosF, selectedType, (selectedType == BLACKHOLE ? speed : holdLagFrame),
+                        //(selectedType == BLACKHOLE ? brushSize : brushSize * 10.0f));
+
+                    if (selectedType == BLACKHOLE) {
+                        InstantiateSpawner(mousePosF, selectedType, speed, brushSize);
+                    }
+                    else {
+                        InstantiateSpawner(mousePosF, selectedType, holdLagFrame, brushSize * 10.0f);
+                    }
                 }
                 isMidClick = true;
             }
@@ -525,7 +546,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                     else if (selectedType == BLACKHOLE) {
                         sf::Vector2i mousePosInt = solver.getCurrentMousePos();
                         sf::Vector2f mousePosF = { (float)mousePosInt.x, (float)mousePosInt.y };
-                        InstantiateSpawner(mousePosF, selectedType, holdLagFrame, brushSize);
+                        InstantiateSpawner(mousePosF, selectedType, speed, brushSize);
                     }
                     else if (frameNum % holdLagFrame == 0) {
                         InstantiateObject(touchPoint, selectedType);
@@ -582,23 +603,29 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                 brushSize -= 1.0f;
             }
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
-                if (!isLeftDown) {
-                    holdLagFrame++;
-                }
+                /*if (!isLeftDown) {
+                    speed -= 0.1f;
+                }*/
+                speed -= 0.1f;
+
                 isLeftDown = true;
             }
             else {
                 isLeftDown = false;
             }
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) {
-                if (!isRightDown) {
-                    holdLagFrame--;
-                }
+                /*if (!isRightDown) {
+                    speed += 0.1f;
+                }*/
+                speed += 0.1f;
+
                 isRightDown = true;
             }
             else {
                 isRightDown = false;
             }
+            speed = (speed < 0.5f ? 0.5f : speed);
+            holdLagFrame = (int)(6.0f / speed);
 
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::F5)) {
                 solver.clearAll();
@@ -615,12 +642,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
             }
             else if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) {
                 if (isDeleteMode) {
-                    solver.deleteSpawersOfType(selectedType);
+                    solver.deleteSpawnersOfType(selectedType);
                 }
             }
 
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::H)) {
-                if (isDeleteMode && !isHDown) {
+                if (!isHDown) {
                     solver.clearHalf();
                 }
 
@@ -687,7 +714,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
             typeText.setString(ss.str());
 
             std::ostringstream ss2;
-            ss2 << "Speed: " << (float)(60.0f / (holdLagFrame * 10.0f));
+            ss2 << "Speed: " << speed;
             speedText.setString(ss2.str());
 
             std::ostringstream ss3;

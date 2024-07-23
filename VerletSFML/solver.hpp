@@ -271,7 +271,7 @@ public:
             applyLinkConstraint(step_dt);
             updateObjects(step_dt);
         }
-
+        updateSpawner();
         lastMousePos = currentMousePos;
     }
 
@@ -399,7 +399,7 @@ public:
 
     void applyCentripetalForce(sf::Vector2f currentPos, float radius, float power) {
         for (VerletObject& obj : m_objects) {
-            if (obj.pinned) {
+            if (obj.pinned || obj.type == SPAWNER) {
                 continue;
             }
             
@@ -421,7 +421,7 @@ public:
                 obj.addVelocity(velocity * 2.0f, getStepDt());
                 obj.addVelocity((obj.position.y > currentPos.y ? acceleration * 2.0f : acceleration) , getStepDt());
             }
-            else {
+            else if (dist < radius * 5.0f) {
                 obj.addVelocity(acceleration * 75.0f, getStepDt());
             }
 
@@ -483,7 +483,7 @@ public:
         }
     }
 
-    void deleteSpawersOfType(TYPE type) {
+    void deleteSpawnersOfType(TYPE type) {
         for (uint64_t i{ 0 }; i < m_objects.size(); i++) {
             VerletObject& obj = m_objects[i];
 
@@ -570,16 +570,16 @@ private:
             VerletObject& object_1 = m_objects[i];
             // Iterate on object involved in new collision pairs
 
-            /*if (object_1.type == SPAWNER) {
+            if (object_1.type == SPAWNER) {
                 continue;
-            }*/
+            }
 
             for (uint64_t k{i + 1}; k < m_objects.size(); k++) {
                 VerletObject&      object_2 = m_objects[k];
 
-                /*if (object_2.type == SPAWNER) {
+                if (object_2.type == SPAWNER) {
                     continue;
-                }*/
+                }
 
                 const sf::Vector2f v        = object_1.position - object_2.position;
                 const float        dist2    = v.x * v.x + v.y * v.y;
@@ -783,13 +783,13 @@ private:
                 break;
 
             case SPAWNER:
-                if (obj.spawnerType == NONE) {
+                /*if (obj.spawnerType == NONE) {
                     applyPushForce(obj.position, obj.bounce);
                     break;
                 }
 
                 if (obj.spawnerType == BLACKHOLE) {
-                    applyCentripetalForce(obj.position, obj.bounce, (float)(60.0f / (obj.counter * 10.0f)));
+                    applyCentripetalForce(obj.position, obj.bounce, obj.counter);
                     break;
                 }
 
@@ -798,8 +798,35 @@ private:
                     int randNum = rand() % 2;
                     float offset = (randNum == 0 ? -0.1f : 0.1f);
                     tempObj.position.x += offset;
-                }
+                }*/
                 break;
+        }
+    }
+
+    void updateSpawner() {
+        const int frameNum = getFrameNum();
+
+        for (VerletObject& obj : m_objects) {
+            if (obj.type != SPAWNER) {
+                continue;
+            }
+
+            if (obj.spawnerType == NONE) {
+                applyPushForce(obj.position, obj.bounce);
+                continue;
+            }
+
+            if (obj.spawnerType == BLACKHOLE) {
+                applyCentripetalForce(obj.position, obj.bounce, obj.frictionCoeff);
+                continue;
+            }
+
+            if (frameNum % obj.counter == 0) {
+                VerletObject& tempObj = addObject(obj.position, obj.spawnerType);
+                int randNum = rand() % 2;
+                float offset = (randNum == 0 ? -0.1f : 0.1f);
+                tempObj.position.x += offset;
+            }
         }
     }
 
