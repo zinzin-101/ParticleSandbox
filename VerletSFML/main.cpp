@@ -387,6 +387,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     modeText.setFillColor(sf::Color::White);
     modeText.setPosition(60, 180);
 
+    sf::Text toggleSimText;
+    toggleSimText.setFont(font);
+    toggleSimText.setCharacterSize(50);
+    toggleSimText.setFillColor(sf::Color::White);
+    toggleSimText.setPosition(60, 230);
+
 
     //for (int i = 0; i < MAXPOINTS; i++) {
     //    // select the font
@@ -490,6 +496,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
     bool isPeriodDown = false;
     bool isCommaDown = false;
+
+    bool isVDown = false;
+    bool toggleSimulation = true;
 
     //bool isCDown = false;
     //bool stringMode = false;
@@ -741,7 +750,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                         nextType = NUM_OF_TYPE - 1;
                     }
 
-                    if (nextType == SPAWNER) {
+                    if (nextType == SPAWNER || nextType == STRING) {
                         nextType--;
                     }
                 }
@@ -754,7 +763,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                 if (!isPeriodDown) {
                     nextType++;
                     
-                    if (nextType == SPAWNER) {
+                    if (nextType == SPAWNER || nextType == STRING) {
                         nextType++;
                     }
                 }
@@ -772,6 +781,16 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                 holdLagFrame = 1;
             }
 
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::V)) {
+                if (!isVDown) {
+                    toggleSimulation = !toggleSimulation;
+                }
+                isVDown = true;
+            }
+            else {
+                isVDown = false;
+            }
+
             /*if (sf::Keyboard::isKeyPressed(sf::Keyboard::C)) {
                 if (!isCDown) {
                     stringMode = !stringMode;
@@ -783,7 +802,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                 isCDown = false;
             }*/
 
-            solver.update();
+            solver.update(toggleSimulation);
 
             window.clear(sf::Color::White);
             renderer.render(solver);
@@ -821,10 +840,21 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
             }
             modeText.setString(ss4.str());
 
+            std::ostringstream ss5;
+            ss5 << "Simulation: ";
+            if (toggleSimulation) {
+                ss5 << "Running";
+            }
+            else {
+                ss5 << "Paused";
+            }
+            toggleSimText.setString(ss5.str());
+
             window.draw(typeText);
             window.draw(speedText);
             window.draw(spreadText);
             window.draw(modeText);
+            window.draw(toggleSimText);
 
             window.display();
 

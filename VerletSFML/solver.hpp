@@ -250,7 +250,7 @@ public:
 
     void addObjectCluster(sf::Vector2f pos, TYPE type, float size) {
         float halfSize = size / 2.0f;
-        float increment = 2.0 * typeRadiusArr[type] - 0.1f;
+        float increment = 2.0 * typeRadiusArr[type] - 0.05f;
         for (float i = -halfSize; i <= halfSize; i += increment) {
             for (float j = -halfSize; j <= halfSize; j += increment) {
                 sf::Vector2f temp = { i,j };
@@ -266,19 +266,24 @@ public:
         return m_links.emplace_back(obj1, obj2, dist);
     }
 
-    void update()
+    void update(bool canUpdate)
     {
         m_time += m_frame_dt;
         const float step_dt = getStepDt();
-        for (uint32_t i{m_sub_steps}; i--;) {
-            applyGravity();
-            //applyTouchForce();
-            checkCollisions(step_dt);
-            applyConstraint(step_dt);
-            applyLinkConstraint(step_dt);
-            updateObjects(step_dt);
+
+        if (canUpdate) {
+            for (uint32_t i{ m_sub_steps }; i--;) {
+                applyGravity();
+                //applyTouchForce();
+                checkCollisions(step_dt);
+                applyConstraint(step_dt);
+                applyLinkConstraint(step_dt);
+                updateObjects(step_dt);
+            }
+
+            updateSpawner();
         }
-        updateSpawner();
+
         lastMousePos = currentMousePos;
     }
 
