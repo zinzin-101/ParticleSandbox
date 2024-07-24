@@ -796,7 +796,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::O)) {
                 if (!isODown) {
-                    solver.writeSave("save.txt");
+                    solver.writeSave("save" + std::to_string((int)selectedType) + ".txt");
                 }
                 isODown = true;
             }
@@ -806,7 +806,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::I)) {
                 if (!isIDown) {
-                    solver.readSave("save.txt");
+                    solver.readSave("save" + std::to_string((int)selectedType) + ".txt");
                 }
                 isIDown = true;
             }

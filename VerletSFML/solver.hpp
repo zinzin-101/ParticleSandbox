@@ -569,6 +569,15 @@ public:
             float y = std::stof(line);
 
             std::getline(file, line, ',');
+            int counter = std::stoi(line);
+
+            std::getline(file, line, ',');
+            float bounce = std::stof(line);
+
+            std::getline(file, line, ',');
+            float friction = std::stof(line);
+
+            std::getline(file, line, ',');
             int type = std::stoi(line);
 
             std::getline(file, line);
@@ -576,6 +585,9 @@ public:
 
             VerletObject& obj = addObject({ x,y }, (TYPE)type);
             obj.spawnerType = (TYPE)spawnerType;
+            obj.counter = counter;
+            obj.bounce = bounce;
+            obj.frictionCoeff = friction;
         }
 
         file.close();
@@ -591,6 +603,9 @@ public:
         std::ostringstream ss;
         for (VerletObject& obj : m_objects) {
             ss << obj.position.x << "," << obj.position.y << ",";
+            ss << obj.counter << ",";
+            ss << obj.bounce << ",";
+            ss << obj.frictionCoeff << ",";
             ss << (int)obj.type << ",";
             ss << (int)obj.spawnerType << "\n";
         }
