@@ -646,7 +646,7 @@ private:
         }
     }
 
-    void applyTouchForce()
+    void applyTouchForce(float power)
     {
         for (auto& obj : m_objects) {
             if (!obj.pinned) {
@@ -657,7 +657,7 @@ private:
                         float dist2 = v.x * v.x + v.y * v.y;
                         float dist = sqrt(dist2);
                         if (dist < 150) {
-                            obj.accelerate({ (float)60.0f*diff_points[i][0], (float)60.0f * diff_points[i][1] });
+                            obj.accelerate({ (power * 0.5f) * diff_points[i][0], (power * 0.5f) * diff_points[i][1] });
                         }
                     }
                 }
