@@ -1,8 +1,11 @@
 #pragma once
 #include <vector>
 #include <cmath>
+#include <fstream>
+#include <iostream>
 #include <SFML/Graphics.hpp>
 #include <stdlib.h>
+#include <string>
 
 #include "utils/math.hpp"
 
@@ -544,6 +547,57 @@ public:
 
     sf::Vector2f getNormalizedVector(sf::Vector2f v) {
         return v / getVectorMagnitude(v);
+    }
+
+    bool readSave(std::string fileName) {
+        std::ifstream file(fileName);
+
+        if (!file.is_open()) {
+            return false;
+        }
+
+        clearAll();
+
+        std::string line;
+        while (!file.eof()) {
+            if (!std::getline(file, line, ',')) {
+                break;
+            }
+            float x = std::stof(line);
+
+            std::getline(file, line, ',');
+            float y = std::stof(line);
+
+            std::getline(file, line, ',');
+            int type = std::stoi(line);
+
+            std::getline(file, line);
+            int spawnerType = std::stoi(line);
+
+            VerletObject& obj = addObject({ x,y }, (TYPE)type);
+            obj.spawnerType = (TYPE)spawnerType;
+        }
+
+        file.close();
+    }
+
+    bool writeSave(std::string fileName) {
+        std::ofstream file(fileName);
+        
+        if (!file) {
+            return false;
+        }
+
+        std::ostringstream ss;
+        for (VerletObject& obj : m_objects) {
+            ss << obj.position.x << "," << obj.position.y << ",";
+            ss << (int)obj.type << ",";
+            ss << (int)obj.spawnerType << "\n";
+        }
+        file << ss.str();
+        file.close();
+
+        return true;
     }
 
 private:

@@ -500,6 +500,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     bool isVDown = false;
     bool toggleSimulation = true;
 
+    bool isODown = false;
+    bool isIDown = false;
+
     //bool isCDown = false;
     //bool stringMode = false;
  
@@ -789,6 +792,26 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
             }
             else {
                 isVDown = false;
+            }
+
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::O)) {
+                if (!isODown) {
+                    solver.writeSave("save.txt");
+                }
+                isODown = true;
+            }
+            else {
+                isODown = false;
+            }
+
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::I)) {
+                if (!isIDown) {
+                    solver.readSave("save.txt");
+                }
+                isIDown = true;
+            }
+            else {
+                isIDown = false;
             }
 
             /*if (sf::Keyboard::isKeyPressed(sf::Keyboard::C)) {
