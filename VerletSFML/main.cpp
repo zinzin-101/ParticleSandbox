@@ -507,7 +507,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     //bool isCDown = false;
     //bool stringMode = false;
     
-    Button button({ 60, 230 } , 100,100,"test",50);
+    Button button({ 500,500 } , 100,100,"test",50);
 
     Msg.message = ~WM_QUIT;
     while (Msg.message != WM_QUIT)

@@ -65,7 +65,6 @@ void Button::drawButton(sf::RenderTarget& target) const {
 	textObj.setCharacterSize(fontSize);
 	textObj.setFillColor(sf::Color::Black);
 	textObj.setPosition(position);
-
 	target.draw(button);
 	target.draw(textObj);
 }
