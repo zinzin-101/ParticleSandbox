@@ -64,8 +64,14 @@ void Button::drawButton(sf::RenderTarget& target) const {
 	textObj.setString(text);
 	textObj.setCharacterSize(fontSize);
 	textObj.setFillColor(sf::Color::Blue);
-	textObj.setPosition(position);
-	textObj.setOrigin({0.5f , 0.5f});
+	//textObj.setPosition(position);
+	//textObj.setOrigin({0.5f , 0.5f});
+	/*textObj.setPosition(position + sf::Vector2f(sizeX/ 2.0f - textObj.getLocalBounds().width / 2.0f,
+		sizeY / 2.0f - textObj.getLocalBounds().height));*/
+
+	textObj.setPosition(button.getPosition() + sf::Vector2f(button.getSize().x / 2.0f - textObj.getLocalBounds().width,
+		button.getSize().y / 3.0f - 3.0f *  textObj.getLocalBounds().height));
+
 
 	target.draw(button);
 	target.draw(textObj);

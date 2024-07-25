@@ -507,8 +507,27 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     //bool isCDown = false;
     //bool stringMode = false;
     
-    Button scrollLeftBtn({ 100,290 }, 50, 50, "<<<<", 50);
-    Button scrollRightBtn({ 200,290 } , 50,50,">>>>", 50);
+    Button scrollLeftBtnType({ typeText.getPosition().x + typeText.getLocalBounds().width + 360, typeText.getPosition().y + 50 }, 75, 50, "<<<<", 50);
+    Button scrollRightBtnType({ typeText.getPosition().x + typeText.getLocalBounds().width + 460, typeText.getPosition().y + 50 }, 75, 50, ">>>>", 50);
+
+    Button scrollLeftBtnSpeed({ speedText.getPosition().x + speedText.getLocalBounds().width + 360, speedText.getPosition().y + 50 }, 75, 50, "<<<<", 50);
+    Button scrollRightBtnSpeed({ speedText.getPosition().x + speedText.getLocalBounds().width + 460, speedText.getPosition().y + 50 }, 75, 50, ">>>>", 50);
+
+    Button scrollLeftBtnSpread({ spreadText.getPosition().x + spreadText.getLocalBounds().width + 360, spreadText.getPosition().y + 50 }, 75, 50, "<<<<", 50);
+    Button scrollRightBtnSpread({ spreadText.getPosition().x + spreadText.getLocalBounds().width + 460, spreadText.getPosition().y + 50 }, 75, 50, ">>>>", 50);
+
+    Button scrollLeftBtnMode({ modeText.getPosition().x + modeText.getLocalBounds().width + 360, modeText.getPosition().y + 50 }, 75, 50, "<<<<", 50);
+    Button scrollRightBtnMode({ modeText.getPosition().x + modeText.getLocalBounds().width + 460, modeText.getPosition().y + 50 }, 75, 50, ">>>>", 50);
+
+    Button scrollLeftBtnToggleSim({ toggleSimText.getPosition().x + toggleSimText.getLocalBounds().width + 360, toggleSimText.getPosition().y + 50 }, 75, 50, "<<<<", 50);
+    Button scrollRightBtnToggleSim({ toggleSimText.getPosition().x + toggleSimText.getLocalBounds().width + 460, toggleSimText.getPosition().y + 50 }, 75, 50, ">>>>", 50);
+
+    Button buttonArr[][2] = { {scrollLeftBtnType,scrollRightBtnType},
+                              {scrollLeftBtnSpeed,scrollRightBtnSpeed},
+                              {scrollLeftBtnSpread,scrollRightBtnSpread},
+                              {scrollLeftBtnMode,scrollRightBtnMode},
+                              {scrollLeftBtnToggleSim,scrollRightBtnToggleSim}
+                            };
 
     Msg.message = ~WM_QUIT;
     while (Msg.message != WM_QUIT)
@@ -536,6 +555,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
             //}
             solver.updateMousePos(sf::Mouse::getPosition(window));
             solver.updateFrameNum(frameNum);
+
+            for (int i = 0; i < 5; i++) {
+                for (int j = 0; j < 2; j++) {
+                    buttonArr[i][j].canPress(solver.getCurrentMousePosF());
+                }
+            }
+
             if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
                 if (isDeleteMode) {
                     solver.deleteBrush(5.0f);
@@ -623,27 +649,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
             }
             else {
                 isMidClick = false;
-            }
-
-            for (int i = 0; i < MAXPOINTS; i++) {
-                if (points[i][0] >= 0 && points[i][1] >= 0) {
-                    sf::Vector2f touchPoint = { (float)points[i][0], (float)points[i][1] };
-                    if (isDeleteMode) {
-                        solver.deleteBrush(brushSize, touchPoint);
-                    }
-                    else if (selectedType == NONE) {
-                        solver.applyForce(touchPoint);
-                        //solver.applyCentripetalForce(touchPoint, brushSize);
-                    }
-                    else if (selectedType == BLACKHOLE) {
-                        sf::Vector2i mousePosInt = solver.getCurrentMousePos();
-                        sf::Vector2f mousePosF = { (float)mousePosInt.x, (float)mousePosInt.y };
-                        InstantiateSpawner(mousePosF, selectedType, speed, brushSize);
-                    }
-                    else if (frameNum % holdLagFrame == 0) {
-                        InstantiateObject(touchPoint, selectedType);
-                    }
-                }
             }
     
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num1)) {
@@ -783,6 +788,166 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
             else {
                 isPeriodDown = false;
             }
+
+            for (int i = 0; i < MAXPOINTS; i++) {
+                if (points[i][0] >= 0 && points[i][1] >= 0) {
+                    sf::Vector2f touchPoint = { (float)points[i][0], (float)points[i][1] };
+                    if (isDeleteMode) {
+                        solver.deleteBrush(brushSize, touchPoint);
+                    }
+                    else if (selectedType == NONE) {
+                        solver.applyForce(touchPoint);
+                        //solver.applyCentripetalForce(touchPoint, brushSize);
+                    }
+                    else if (selectedType == BLACKHOLE) {
+                        sf::Vector2i mousePosInt = solver.getCurrentMousePos();
+                        sf::Vector2f mousePosF = { (float)mousePosInt.x, (float)mousePosInt.y };
+                        InstantiateSpawner(mousePosF, selectedType, speed, brushSize);
+                    }
+                    else if (frameNum % holdLagFrame == 0) {
+                        InstantiateObject(touchPoint, selectedType);
+                    }
+
+                    for (int i = 0; i < 5; i++) {
+                        for (int j = 0; j < 2; j++) {
+                            switch (i) {
+                            case 0:
+                                if (j == 0) {
+                                    if (!buttonArr[i][j].canPress(touchPoint)) {
+                                        break;
+                                    }
+                                    nextType--;
+                                    if (nextType < 0) {
+                                        nextType = NUM_OF_TYPE - 1;
+                                    }
+
+                                    if (nextType == SPAWNER || nextType == STRING) {
+                                        nextType--;
+                                    }
+                                }
+                                else {
+                                    if (!buttonArr[i][j].canPress(touchPoint)) {
+                                        break;
+                                    }
+
+                                    nextType++;
+                                    if (nextType == SPAWNER || nextType == STRING) {
+                                        nextType++;
+                                    }
+                                }
+                                break;
+                            case 1:
+                                if (!buttonArr[i][j].canPress(touchPoint)) {
+                                    break;
+                                }
+                                if (j == 0) {
+                                    speed -= 0.1f;
+                                }
+                                else {
+                                    speed += 0.1f;
+                                }
+                                break;
+                            case 2:
+                                if (!buttonArr[i][j].canPress(touchPoint)) {
+                                    break;
+                                }
+                                if (j == 0) {
+                                    brushSize -= 1.0f;
+                                }
+                                else {
+                                    brushSize += 1.0f;
+                                }
+                                break;
+                            case 3:
+                                if (!buttonArr[i][j].canPress(touchPoint)) {
+                                    break;
+                                }
+                                isDeleteMode = !isDeleteMode;
+                                break;
+                            case 4:
+                                if (!buttonArr[i][j].canPress(touchPoint)) {
+                                    isVDown = false;
+                                    break;
+                                }
+                                toggleSimulation = !toggleSimulation;
+                                break;
+
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
+                for (int i = 0; i < 5; i++) {
+                    for (int j = 0; j < 2; j++) {
+                        switch (i) {
+                        case 0:
+                            if (j == 0) {
+                                if (!buttonArr[i][j].canPress(solver.getCurrentMousePosF())) {
+                                    break;
+                                }
+                                nextType--;
+                                if (nextType < 0) {
+                                    nextType = NUM_OF_TYPE - 1;
+                                }
+
+                                if (nextType == SPAWNER || nextType == STRING) {
+                                    nextType--;
+                                }
+                            }
+                            else {
+                                if (!buttonArr[i][j].canPress(solver.getCurrentMousePosF())) {
+                                    break;
+                                }
+
+                                nextType++;
+                                if (nextType == SPAWNER || nextType == STRING) {
+                                    nextType++;
+                                }
+                            }
+                            break;
+                        case 1:
+                            if (!buttonArr[i][j].canPress(solver.getCurrentMousePosF())) {
+                                break;
+                            }
+                            if (j == 0) {
+                                speed -= 0.1f;
+                            }
+                            else {
+                                speed += 0.1f;
+                            }
+                            break;
+                        case 2:
+                            if (!buttonArr[i][j].canPress(solver.getCurrentMousePosF())) {
+                                break;
+                            }
+                            if (j == 0) {
+                                brushSize -= 1.0f;
+                            }
+                            else {
+                                brushSize += 1.0f;
+                            }
+                            break;
+                        case 3:
+                            if (!buttonArr[i][j].canPress(solver.getCurrentMousePosF())) {
+                                break;
+                            }
+                            isDeleteMode = !isDeleteMode;
+                            break;
+                        case 4:
+                            if (!buttonArr[i][j].canPress(solver.getCurrentMousePosF())) {
+                                isVDown = false;
+                                break;
+                            }
+                            toggleSimulation = !toggleSimulation;
+                            break;
+
+                        }
+                    }
+                }
+            }
+
             nextType = nextType % NUM_OF_TYPE;
             selectedType = (TYPE)nextType;
 
@@ -825,7 +990,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
             /*if (sf::Keyboard::isKeyPressed(sf::Keyboard::C)) {
                 if (!isCDown) {
                     stringMode = !stringMode;
-                }
+                }s
 
                 isCDown = true;
             }
@@ -887,8 +1052,16 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
             window.draw(modeText);
             window.draw(toggleSimText);
 
-            scrollLeftBtn.drawButton(window);
-            scrollRightBtn.drawButton(window);
+            scrollLeftBtnType.drawButton(window);
+            scrollRightBtnType.drawButton(window);
+            scrollLeftBtnSpeed.drawButton(window);
+            scrollRightBtnSpeed.drawButton(window);
+            scrollLeftBtnSpread.drawButton(window);
+            scrollRightBtnSpread.drawButton(window);
+            scrollLeftBtnMode.drawButton(window);
+            scrollRightBtnMode.drawButton(window);
+            scrollLeftBtnToggleSim.drawButton(window);
+            scrollRightBtnToggleSim.drawButton(window);
 
             window.display();
 
