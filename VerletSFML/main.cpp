@@ -507,7 +507,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     //bool isCDown = false;
     //bool stringMode = false;
     
-    Button button({ 500,500 } , 100,100,"test",50);
+    Button scrollLeftBtn({ 100,290 }, 50, 50, "<<<<", 50);
+    Button scrollRightBtn({ 200,290 } , 50,50,">>>>", 50);
 
     Msg.message = ~WM_QUIT;
     while (Msg.message != WM_QUIT)
@@ -886,7 +887,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
             window.draw(modeText);
             window.draw(toggleSimText);
 
-            button.drawButton(window);
+            scrollLeftBtn.drawButton(window);
+            scrollRightBtn.drawButton(window);
 
             window.display();
 
