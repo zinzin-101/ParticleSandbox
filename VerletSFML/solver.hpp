@@ -1113,3 +1113,16 @@ private:
         }
     }
 };
+
+
+float getVectorMagnitudeSqr(sf::Vector2f vec) {
+    return vec.x * vec.x + vec.y * vec.y;
+}
+
+float getVectorMagnitude(sf::Vector2f vec) {
+    return sqrtf(vec.x * vec.x + vec.y * vec.y);
+}
+
+sf::Vector2f getNormalizedVector(sf::Vector2f v) {
+    return v / getVectorMagnitude(v);
+}

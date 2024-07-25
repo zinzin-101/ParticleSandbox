@@ -8,6 +8,7 @@
 #include <windowsx.h>   // included for point conversion
 #define MAXPOINTS 50
 
+#include "button.hpp"
 #include "solver.hpp"
 #include "renderer.hpp"
 #include "utils/number_generator.hpp"
@@ -501,11 +502,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     bool toggleSimulation = true;
 
     bool isODown = false;
-    bool isIDown = false;
+    bool isLDown = false;
 
     //bool isCDown = false;
     //bool stringMode = false;
- 
+    
+    Button button({ 60, 230 } , 100,100,"test",50);
+
     Msg.message = ~WM_QUIT;
     while (Msg.message != WM_QUIT)
     {
@@ -732,6 +735,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                 if (isDeleteMode) {
                     solver.deleteSpawnersOfType(selectedType);
                 }
+
+                if (sf::Keyboard::isKeyPressed(sf::Keyboard::LControl)) {
+                    solver.writeSave("save" + std::to_string((int)selectedType) + ".txt");
+                }
             }
 
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::H)) {
@@ -794,24 +801,24 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                 isVDown = false;
             }
 
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::O)) {
-                if (!isODown) {
+            /*if (sf::Keyboard::isKeyPressed(sf::Keyboard::O)) {
+                if (!isODown && sf::Keyboard::isKeyPressed(sf::Keyboard::LControl)) {
                     solver.writeSave("save" + std::to_string((int)selectedType) + ".txt");
                 }
                 isODown = true;
             }
             else {
                 isODown = false;
-            }
+            }*/
 
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::I)) {
-                if (!isIDown) {
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::L)) {
+                if (!isLDown && sf::Keyboard::isKeyPressed(sf::Keyboard::LControl)) {
                     solver.readSave("save" + std::to_string((int)selectedType) + ".txt");
                 }
-                isIDown = true;
+                isLDown = true;
             }
             else {
-                isIDown = false;
+                isLDown = false;
             }
 
             /*if (sf::Keyboard::isKeyPressed(sf::Keyboard::C)) {
@@ -878,6 +885,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
             window.draw(spreadText);
             window.draw(modeText);
             window.draw(toggleSimText);
+
+            button.drawButton(window);
 
             window.display();
 
