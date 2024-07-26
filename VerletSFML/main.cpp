@@ -522,12 +522,28 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     Button scrollLeftBtnToggleSim({ toggleSimText.getPosition().x + toggleSimText.getLocalBounds().width + 360, toggleSimText.getPosition().y + 50 }, 75, 50, "<<<<", 50);
     Button scrollRightBtnToggleSim({ toggleSimText.getPosition().x + toggleSimText.getLocalBounds().width + 460, toggleSimText.getPosition().y + 50 }, 75, 50, ">>>>", 50);
 
+    Button loadBtn({110, toggleSimText.getPosition().y + 100 }, 75, 50, "LOAD", 50);
+    Button saveBtn({210, toggleSimText.getPosition().y + 100 }, 75, 50, "SAVE", 50);
+
+    Button resetBtn({ 310, toggleSimText.getPosition().y + 100 }, 75, 50, "RESET", 50);
+
     Button buttonArr[][2] = { {scrollLeftBtnType,scrollRightBtnType},
                               {scrollLeftBtnSpeed,scrollRightBtnSpeed},
                               {scrollLeftBtnSpread,scrollRightBtnSpread},
                               {scrollLeftBtnMode,scrollRightBtnMode},
-                              {scrollLeftBtnToggleSim,scrollRightBtnToggleSim}
+                              {scrollLeftBtnToggleSim,scrollRightBtnToggleSim},
+                              {loadBtn, saveBtn},
+                              {resetBtn,resetBtn}
                             };
+
+    bool buttonPressArr[][2] = {{false,false},
+                               {false,false},
+                               {false,false},
+                               {false,false},
+                               {false,false},
+                               {false, false},
+                               {false, false}
+                             };
 
     Msg.message = ~WM_QUIT;
     while (Msg.message != WM_QUIT)
@@ -556,7 +572,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
             solver.updateMousePos(sf::Mouse::getPosition(window));
             solver.updateFrameNum(frameNum);
 
-            for (int i = 0; i < 5; i++) {
+            for (int i = 0; i < 7; i++) {
                 for (int j = 0; j < 2; j++) {
                     buttonArr[i][j].canPress(solver.getCurrentMousePosF());
                 }
@@ -789,119 +805,165 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                 isPeriodDown = false;
             }
 
+            bool useBtn = false;
             if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
-                for (int i = 0; i < 5; i++) {
+                useBtn = true;
+                for (int i = 0; i < 7; i++) {
                     for (int j = 0; j < 2; j++) {
                         switch (i) {
                         case 0:
                             if (j == 0) {
-                                if (!buttonArr[i][j].canPress(solver.getCurrentMousePosF())) {
-                                    buttonArr[i][j].setLastPressed(false);
-                                    break;
-                                }
+                                if (buttonArr[i][j].canPress(solver.getCurrentMousePosF())) {
+                                    if (!buttonPressArr[i][j]) {
+                                        nextType--;
+                                        if (nextType < 0) {
+                                            nextType = NUM_OF_TYPE - 1;
+                                        }
 
-                                if (buttonArr[i][j].getLastPressed() && buttonArr[i][j].canPress(solver.getCurrentMousePosF())) {
-                                    break;
+                                        if (nextType == SPAWNER || nextType == STRING) {
+                                            nextType--;
+                                        }
+                                    }
+                                    buttonPressArr[i][j] = true;
                                 }
-                                buttonArr[i][j].setLastPressed(true);
-
-                                nextType--;
-                                if (nextType < 0) {
-                                    nextType = NUM_OF_TYPE - 1;
-                                }
-
-                                if (nextType == SPAWNER || nextType == STRING) {
-                                    nextType--;
+                                else {
+                                    buttonPressArr[i][j] = false;
                                 }
                             }
-                            else {
-                                if (!buttonArr[i][j].canPress(solver.getCurrentMousePosF())) {
-                                    buttonArr[i][j].setLastPressed(false);
-                                    break;
-                                }
+                            else if (j == 1) {
+                                if (buttonArr[i][j].canPress(solver.getCurrentMousePosF())) {
+                                    if (!buttonPressArr[i][j]) {
+                                        nextType++;
 
-                                if (buttonArr[i][j].getLastPressed() && buttonArr[i][j].canPress(solver.getCurrentMousePosF())) {
-                                    break;
+                                        if (nextType == SPAWNER || nextType == STRING) {
+                                            nextType++;
+                                        }
+                                    }
+                                    buttonPressArr[i][j] = true;
                                 }
-                                buttonArr[i][j].setLastPressed(true);
-                                buttonArr[i][j].setLastPressed(true);
-                                nextType++;
-                                if (nextType == SPAWNER || nextType == STRING) {
-                                    nextType++;
+                                else {
+                                    buttonPressArr[i][j] = false;
                                 }
                             }
                             break;
                         case 1:
                             if (!buttonArr[i][j].canPress(solver.getCurrentMousePosF())) {
-                                    buttonArr[i][j].setLastPressed(false);
-                                    break;
+                                break;
                             }
                             if (j == 0) {
                                 speed -= 0.1f;
                             }
-                            else {
+                            else if (j == 1) {
                                 speed += 0.1f;
                             }
                             break;
                         case 2:
+                            if (!buttonArr[i][j].canPress(solver.getCurrentMousePosF())) {
+                                break;
+                            }
                             if (j == 0) {
-                                if (!buttonArr[i][j].canPress(solver.getCurrentMousePosF())) {
-                                    buttonArr[i][j].setLastPressed(false);
-                                    break;
-                                }
-
-                                if (buttonArr[i][j].getLastPressed() && buttonArr[i][j].canPress(solver.getCurrentMousePosF())) {
-                                    break;
-                                }
-                                buttonArr[i][j].setLastPressed(true);
                                 brushSize -= 1.0f;
                             }
-                            else {
-                                if (!buttonArr[i][j].canPress(solver.getCurrentMousePosF())) {
-                                    buttonArr[i][j].setLastPressed(false);
-                                    break;
-                                }
-
-                                if (buttonArr[i][j].getLastPressed() && buttonArr[i][j].canPress(solver.getCurrentMousePosF())) {
-                                    break;
-                                }
-                                buttonArr[i][j].setLastPressed(true);
+                            else if (j == 1){
                                 brushSize += 1.0f;
                             }
                             break;
                         case 3:
-                            if (!buttonArr[i][j].canPress(solver.getCurrentMousePosF())) {
-                                buttonArr[i][j].setLastPressed(false);
-                                break;
-                            }
+                            if (j == 0) {
+                                if (buttonArr[i][j].canPress(solver.getCurrentMousePosF())) {
+                                    if (!buttonPressArr[i][j]) {
+                                        isDeleteMode = !isDeleteMode;
+                                    }
 
-                            if (buttonArr[i][j].getLastPressed() && buttonArr[i][j].canPress(solver.getCurrentMousePosF())) {
-                                break;
+                                    buttonPressArr[i][j] = true;
+                                }
+                                else {
+                                    buttonPressArr[i][j] = false;
+                                }
                             }
-                            buttonArr[i][j].setLastPressed(true);
-                            isDeleteMode = !isDeleteMode;
+                            else if (j == 1) {
+                                if (buttonArr[i][j].canPress(solver.getCurrentMousePosF())) {
+                                    if (!buttonPressArr[i][j]) {
+                                        isDeleteMode = !isDeleteMode;
+                                    }
+
+                                    buttonPressArr[i][j] = true;
+                                }
+                                else {
+                                    buttonPressArr[i][j] = false;
+                                }
+                            }
                             break;
                         case 4:
-                            if (!buttonArr[i][j].canPress(solver.getCurrentMousePosF())) {
-                                buttonArr[i][j].setLastPressed(false);
-                                break;
-                            }
+                            if (j == 0) {
+                                if (buttonArr[i][j].canPress(solver.getCurrentMousePosF())) {
+                                    if (!buttonPressArr[i][j]) {
+                                        toggleSimulation = !toggleSimulation;
+                                    }
 
-                            if (buttonArr[i][j].getLastPressed() && buttonArr[i][j].canPress(solver.getCurrentMousePosF())) {
-                                break;
+                                    buttonPressArr[i][j] = true;
+                                }
+                                else {
+                                    buttonPressArr[i][j] = false;
+                                }
                             }
-                            buttonArr[i][j].setLastPressed(true);
-                            toggleSimulation = !toggleSimulation;
+                            else if (j == 1) {
+                                if (buttonArr[i][j].canPress(solver.getCurrentMousePosF())) {
+                                    if (!buttonPressArr[i][j]) {
+                                        toggleSimulation = !toggleSimulation;
+                                    }
+
+                                    buttonPressArr[i][j] = true;
+                                }
+                                else {
+                                    buttonPressArr[i][j] = false;
+                                }
+                            }
                             break;
 
+                        case 5:
+                            if (j == 0) {
+                                if (buttonArr[i][j].canPress(solver.getCurrentMousePosF())) {
+                                    if (!buttonPressArr[i][j]) {
+                                        solver.readSave("save" + std::to_string((int)selectedType) + ".txt");
+                                    }
+
+                                    buttonPressArr[i][j] = true;
+                                }
+                                else {
+                                    buttonPressArr[i][j] = false;
+                                }
+                            }
+                            else if (j == 1) {
+                                if (buttonArr[i][j].canPress(solver.getCurrentMousePosF())) {
+                                    if (!buttonPressArr[i][j]) {
+                                        solver.writeSave("save" + std::to_string((int)selectedType) + ".txt");
+                                    }
+
+                                    buttonPressArr[i][j] = true;
+                                }
+                                else {
+                                    buttonPressArr[i][j] = false;
+                                }
+                            }
+
+                            break;
+                           
+                        case 6:
+                            if (buttonArr[i][j].canPress(solver.getCurrentMousePosF())) {
+                                solver.clearAll();
+                            }
                         }
                     }
                 }
             }
+            else if (!sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
+                useBtn = false;
+            }
 
-            for (int i = 0; i < MAXPOINTS; i++) {
-                if (points[i][0] >= 0 && points[i][1] >= 0) {
-                    sf::Vector2f touchPoint = { (float)points[i][0], (float)points[i][1] };
+            for (int n = 0; n < MAXPOINTS; n++) {
+                if (points[n][0] >= 0 && points[n][1] >= 0) {
+                    sf::Vector2f touchPoint = { (float)points[n][0], (float)points[n][1] };
                     if (isDeleteMode) {
                         solver.deleteBrush(brushSize, touchPoint);
                     }
@@ -916,182 +978,162 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                         InstantiateObject(touchPoint, selectedType);
                     }
 
-                    for (int i = 0; i < 5; i++) {
+                    useBtn = true;
+                    for (int i = 0; i < 7; i++) {
                         for (int j = 0; j < 2; j++) {
                             switch (i) {
                             case 0:
                                 if (j == 0) {
-                                    if (!buttonArr[i][j].canPress(touchPoint)) {
-                                        buttonArr[i][j].setLastPressed(false);
-                                        break;
-                                    }
+                                    if (buttonArr[i][j].canPress(touchPoint)) {
+                                        if (!buttonPressArr[i][j]) {
+                                            nextType--;
+                                            if (nextType < 0) {
+                                                nextType = NUM_OF_TYPE - 1;
+                                            }
 
-                                    if (buttonArr[i][j].getLastPressed() && buttonArr[i][j].canPress(touchPoint)) {
-                                        break;
+                                            if (nextType == SPAWNER || nextType == STRING) {
+                                                nextType--;
+                                            }
+                                        }
+                                        buttonPressArr[i][j] = true;
                                     }
-                                    buttonArr[i][j].setLastPressed(true);
-
-                                    nextType--;
-                                    if (nextType < 0) {
-                                        nextType = NUM_OF_TYPE - 1;
-                                    }
-
-                                    if (nextType == SPAWNER || nextType == STRING) {
-                                        nextType--;
+                                    else {
+                                        buttonPressArr[i][j] = false;
                                     }
                                 }
-                                else {
-                                    if (!buttonArr[i][j].canPress(touchPoint)) {
-                                        buttonArr[i][j].setLastPressed(false);
-                                        break;
-                                    }
+                                else if (j == 1) {
+                                    if (buttonArr[i][j].canPress(touchPoint)) {
+                                        if (!buttonPressArr[i][j]) {
+                                            nextType++;
 
-                                    if (buttonArr[i][j].getLastPressed() && buttonArr[i][j].canPress(touchPoint)) {
-                                        break;
+                                            if (nextType == SPAWNER || nextType == STRING) {
+                                                nextType++;
+                                            }
+                                        }
+                                        buttonPressArr[i][j] = true;
                                     }
-                                    buttonArr[i][j].setLastPressed(true);
-                                    buttonArr[i][j].setLastPressed(true);
-                                    nextType++;
-                                    if (nextType == SPAWNER || nextType == STRING) {
-                                        nextType++;
+                                    else {
+                                        buttonPressArr[i][j] = false;
                                     }
                                 }
                                 break;
                             case 1:
                                 if (!buttonArr[i][j].canPress(touchPoint)) {
-                                    buttonArr[i][j].setLastPressed(false);
                                     break;
                                 }
                                 if (j == 0) {
                                     speed -= 0.1f;
                                 }
-                                else {
+                                else if (j == 1) {
                                     speed += 0.1f;
                                 }
                                 break;
                             case 2:
+                                if (!buttonArr[i][j].canPress(touchPoint)) {
+                                    break;
+                                }
                                 if (j == 0) {
-                                    if (!buttonArr[i][j].canPress(touchPoint)) {
-                                        buttonArr[i][j].setLastPressed(false);
-                                        break;
-                                    }
-
-                                    if (buttonArr[i][j].getLastPressed() && buttonArr[i][j].canPress(touchPoint)) {
-                                        break;
-                                    }
-                                    buttonArr[i][j].setLastPressed(true);
                                     brushSize -= 1.0f;
                                 }
-                                else {
-                                    if (!buttonArr[i][j].canPress(touchPoint)) {
-                                        buttonArr[i][j].setLastPressed(false);
-                                        break;
-                                    }
-
-                                    if (buttonArr[i][j].getLastPressed() && buttonArr[i][j].canPress(touchPoint)) {
-                                        break;
-                                    }
-                                    buttonArr[i][j].setLastPressed(true);
+                                else if (j == 1) {
                                     brushSize += 1.0f;
                                 }
                                 break;
                             case 3:
-                                if (!buttonArr[i][j].canPress(touchPoint)) {
-                                    buttonArr[i][j].setLastPressed(false);
-                                    break;
-                                }
+                                if (j == 0) {
+                                    if (buttonArr[i][j].canPress(touchPoint)) {
+                                        if (!buttonPressArr[i][j]) {
+                                            isDeleteMode = !isDeleteMode;
+                                        }
 
-                                if (buttonArr[i][j].getLastPressed() && buttonArr[i][j].canPress(touchPoint)) {
-                                    break;
+                                        buttonPressArr[i][j] = true;
+                                    }
+                                    else {
+                                        buttonPressArr[i][j] = false;
+                                    }
                                 }
-                                buttonArr[i][j].setLastPressed(true);
-                                isDeleteMode = !isDeleteMode;
+                                else if (j == 1) {
+                                    if (buttonArr[i][j].canPress(touchPoint)) {
+                                        if (!buttonPressArr[i][j]) {
+                                            isDeleteMode = !isDeleteMode;
+                                        }
+
+                                        buttonPressArr[i][j] = true;
+                                    }
+                                    else {
+                                        buttonPressArr[i][j] = false;
+                                    }
+                                }
                                 break;
                             case 4:
-                                if (!buttonArr[i][j].canPress(touchPoint)) {
-                                    buttonArr[i][j].setLastPressed(false);
-                                    break;
-                                }
+                                if (j == 0) {
+                                    if (buttonArr[i][j].canPress(touchPoint)) {
+                                        if (!buttonPressArr[i][j]) {
+                                            toggleSimulation = !toggleSimulation;
+                                        }
 
-                                if (buttonArr[i][j].getLastPressed() && buttonArr[i][j].canPress(solver.getCurrentMousePosF())) {
-                                    break;
+                                        buttonPressArr[i][j] = true;
+                                    }
+                                    else {
+                                        buttonPressArr[i][j] = false;
+                                    }
                                 }
-                                buttonArr[i][j].setLastPressed(true);
-                                toggleSimulation = !toggleSimulation;
+                                else if (j == 1) {
+                                    if (buttonArr[i][j].canPress(touchPoint)) {
+                                        if (!buttonPressArr[i][j]) {
+                                            toggleSimulation = !toggleSimulation;
+                                        }
+
+                                        buttonPressArr[i][j] = true;
+                                    }
+                                    else {
+                                        buttonPressArr[i][j] = false;
+                                    }
+                                }
                                 break;
 
+                            case 5:
+                                if (j == 0) {
+                                    if (buttonArr[i][j].canPress(touchPoint)) {
+                                        if (!buttonPressArr[i][j]) {
+                                            solver.readSave("save" + std::to_string((int)selectedType) + ".txt");
+                                        }
+
+                                        buttonPressArr[i][j] = true;
+                                    }
+                                    else {
+                                        buttonPressArr[i][j] = false;
+                                    }
+                                }
+                                else if (j == 1) {
+                                    if (buttonArr[i][j].canPress(touchPoint)) {
+                                        if (!buttonPressArr[i][j]) {
+                                            solver.writeSave("save" + std::to_string((int)selectedType) + ".txt");
+                                        }
+
+                                        buttonPressArr[i][j] = true;
+                                    }
+                                    else {
+                                        buttonPressArr[i][j] = false;
+                                    }
+                                }
+
+                                break;
+                            case 6:
+                                if (buttonArr[i][j].canPress(touchPoint)) {
+                                    solver.clearAll();
+                                }
+                                break;
                             }
                         }
                     }
                 }
             }
 
-            if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
-                for (int i = 0; i < 5; i++) {
+            if (!useBtn) {
+                for (int i = 0; i < 7; i++) {
                     for (int j = 0; j < 2; j++) {
-                        switch (i) {
-                        case 0:
-                            if (j == 0) {
-                                if (!buttonArr[i][j].canPress(solver.getCurrentMousePosF())) {
-                                    break;
-                                }
-                                nextType--;
-                                if (nextType < 0) {
-                                    nextType = NUM_OF_TYPE - 1;
-                                }
-
-                                if (nextType == SPAWNER || nextType == STRING) {
-                                    nextType--;
-                                }
-                            }
-                            else {
-                                if (!buttonArr[i][j].canPress(solver.getCurrentMousePosF())) {
-                                    break;
-                                }
-
-                                nextType++;
-                                if (nextType == SPAWNER || nextType == STRING) {
-                                    nextType++;
-                                }
-                            }
-                            break;
-                        case 1:
-                            if (!buttonArr[i][j].canPress(solver.getCurrentMousePosF())) {
-                                break;
-                            }
-                            if (j == 0) {
-                                speed -= 0.1f;
-                            }
-                            else {
-                                speed += 0.1f;
-                            }
-                            break;
-                        case 2:
-                            if (!buttonArr[i][j].canPress(solver.getCurrentMousePosF())) {
-                                break;
-                            }
-                            if (j == 0) {
-                                brushSize -= 1.0f;
-                            }
-                            else {
-                                brushSize += 1.0f;
-                            }
-                            break;
-                        case 3:
-                            if (!buttonArr[i][j].canPress(solver.getCurrentMousePosF())) {
-                                break;
-                            }
-                            isDeleteMode = !isDeleteMode;
-                            break;
-                        case 4:
-                            if (!buttonArr[i][j].canPress(solver.getCurrentMousePosF())) {
-                                isVDown = false;
-                                break;
-                            }
-                            toggleSimulation = !toggleSimulation;
-                            break;
-
-                        }
+                        buttonPressArr[i][j] = false;
                     }
                 }
             }
@@ -1200,16 +1242,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
             window.draw(modeText);
             window.draw(toggleSimText);
 
-            scrollLeftBtnType.drawButton(window);
-            scrollRightBtnType.drawButton(window);
-            scrollLeftBtnSpeed.drawButton(window);
-            scrollRightBtnSpeed.drawButton(window);
-            scrollLeftBtnSpread.drawButton(window);
-            scrollRightBtnSpread.drawButton(window);
-            scrollLeftBtnMode.drawButton(window);
-            scrollRightBtnMode.drawButton(window);
-            scrollLeftBtnToggleSim.drawButton(window);
-            scrollRightBtnToggleSim.drawButton(window);
+            for (int i = 0; i < 7; i++) {
+                for (int j = 0; j < 2; j++) {
+                    buttonArr[i][j].drawButton(window);
+                }
+            }
 
             window.display();
 
