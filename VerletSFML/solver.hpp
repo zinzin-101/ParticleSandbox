@@ -517,7 +517,7 @@ public:
 
     void clearHalf() {
         for (uint64_t i{ 0 }; i < m_objects.size(); i++) {
-            if (m_objects[i].type == SPAWNER) {
+            if (m_objects[i].type == SPAWNER || m_objects[i].type == CONCRETE) {
                 continue;
             }
 
