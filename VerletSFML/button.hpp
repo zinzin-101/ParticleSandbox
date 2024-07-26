@@ -12,11 +12,14 @@ class Button {
 		int fontSize;
 		sf::Color color;
 		sf::Font font;
+		bool lastPressed;
 	
 	public:
 		Button(sf::Vector2f pos, float _sizeX, float _sizeY, std::string _text, int _fontSize);
 		bool canPress(sf::Vector2f pos);
 		void drawButton(sf::RenderTarget& target) const;
+		void setLastPressed(bool value);
+		bool getLastPressed() const;
 };
 
 bool Button::canPress(sf::Vector2f pos) {
@@ -50,6 +53,7 @@ Button::Button(sf::Vector2f pos, float _sizeX, float _sizeY, std::string _text, 
 
 	font.loadFromFile("THSarabunNew.ttf");
 	color = sf::Color::White;
+	lastPressed = false;
 }
 
 void Button::drawButton(sf::RenderTarget& target) const {
@@ -75,4 +79,12 @@ void Button::drawButton(sf::RenderTarget& target) const {
 
 	target.draw(button);
 	target.draw(textObj);
+}
+
+void Button::setLastPressed(bool value) {
+	lastPressed = value;
+}
+
+bool Button::getLastPressed() const {
+	return lastPressed;
 }
